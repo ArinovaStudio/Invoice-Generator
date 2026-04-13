@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getUser } from "@/lib/auth";
 import { deleteImage, uploadImage } from "@/lib/uploads";
@@ -28,7 +28,7 @@ export async function GET() {
   }
 }
 
-export async function PUT(req: Request) {
+export async function PUT(req: NextRequest) {
   try {
     const { user, error } = await getUser();
     if (error || !user) {
@@ -78,5 +78,49 @@ export async function PUT(req: Request) {
 
   } catch {
     return NextResponse.json({ success: false, message: "Internal Server Error" }, { status: 500 });
+  }
+}
+
+export async function DELETE() {
+  try {
+    const { user, error } = await getUser();
+    if (error || !user) {
+      return NextResponse.json({ success: false, message: error || "Unauthorized" }, { status: 401 });
+    }
+
+    const userData = await prisma.user.findUnique({
+      where: { id: user.id },
+      select: {
+        logoUrl: true,
+        invoices: { select: { senderLogoUrl: true } },
+      },
+    });
+
+    if (!userData) {
+      return NextResponse.json({ success: false, message: "User not found" }, { status: 404 });
+    }
+
+    const urlsToDelete = new Set<string>();
+    
+    if (userData.logoUrl) {
+      urlsToDelete.add(userData.logoUrl);
+    }
+    
+    userData.invoices.forEach((invoice) => {
+      if (invoice.senderLogoUrl) {
+        urlsToDelete.add(invoice.senderLogoUrl);
+      }
+    });
+
+    if (urlsToDelete.size > 0) {
+      const deletePromises = Array.from(urlsToDelete).map((url) => deleteImage(url));
+      await Promise.all(deletePromises);
+    }
+
+    await prisma.user.delete({ where: { id: user.id } });
+
+    return NextResponse.json( { message: "Account permanently deleted" }, { status: 200 } );
+  } catch {
+    return NextResponse.json( { success: false, message: "Internal Server Error" }, { status: 500 } );
   }
 }

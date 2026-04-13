@@ -72,7 +72,7 @@ model Client {
   city String?
   state String?
   zip String?
-  country String?
+  country String? @default("India")
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -110,14 +110,14 @@ model Invoice {
   senderCity String?
   senderState String?
   senderZip String?
-  senderCountry String?
+  senderCountry String? @default("India")
 
   clientName String
   clientAddress String?
   clientCity String?
   clientState String?
   clientZip String?
-  clientCountry String?
+  clientCountry String? @default("India")
 
   subTotal Float
   taxTotal Float
