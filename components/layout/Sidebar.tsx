@@ -8,8 +8,8 @@ export default function Sidebar({ isOpen, setIsOpen }: { isOpen: boolean, setIsO
   const navLinks = [
     { name: "Dashboard", href: "/user", icon: "dashboard" },
     { name: "Invoices", href: "/user/invoices", icon: "description" },
+    { name: "Clients", href: "/user/clients", icon: "people" },
     { name: "Settings", href: "/user/settings", icon: "business" },
-    { name: "Payments", href: "/user/payment", icon: "payments" },
   ];
 
   return (

@@ -4,32 +4,27 @@ import Link from "next/link";
 
 export default function DashboardPage() {
   const [invoices, setInvoices] = useState<any[]>([]);
+  const [stats, setStats] = useState({ totalOutstanding: 0, totalPaid: 0, pendingDrafts: 0 });
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const fetchInvoices = async () => {
+    const fetchDashboardData = async () => {
       try {
-        const res = await fetch("/api/user/invoices");
+        const res = await fetch("/api/user/dashboard");
         const data = await res.json();
-        if (data.invoices) setInvoices(data.invoices);
+        
+        if (data.success) {
+          setInvoices(data.recentInvoices);
+          setStats(data.stats);
+        }
       } catch (error) {
-        console.error("Failed to fetch invoices", error);
+        console.error("Failed to fetch dashboard data", error);
       } finally {
         setLoading(false);
       }
     };
-    fetchInvoices();
+    fetchDashboardData();
   }, []);
-
-  const totalOutstanding = invoices
-    .filter(i => i.status === "SENT" || i.status === "OVERDUE")
-    .reduce((sum, i) => sum + i.totalAmount, 0);
-
-  const totalPaid = invoices
-    .filter(i => i.status === "PAID")
-    .reduce((sum, i) => sum + i.totalAmount, 0);
-
-  const pendingDrafts = invoices.filter(i => i.status === "DRAFT").length;
 
   const formatINR = (amount: number) => {
     return new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR" }).format(amount);
@@ -54,32 +49,37 @@ export default function DashboardPage() {
           <span className="text-primary font-bold tracking-widest text-[10px] uppercase mb-2 block">Management Hub</span>
           <h2 className="text-4xl lg:text-5xl font-headline font-extrabold text-on-surface tracking-tight leading-none">Invoices</h2>
         </div>
-        <Link href="/user/invoices/new" className="bg-gradient-to-r from-primary to-primary-container text-white px-8 py-3 rounded-xl font-bold shadow-lg flex items-center gap-2 hover:scale-[1.02] active:scale-95 transition-all">
-          <span className="material-symbols-outlined">add_circle</span>
-          + New Invoice
-        </Link>
+        <div className="flex gap-4">
+          <Link href="/user/invoices" className="bg-surface-container-high text-on-surface px-6 py-3 rounded-xl font-bold hover:bg-surface-container-highest transition-colors">
+            View All
+          </Link>
+          <Link href="/user/invoices/new" className="bg-gradient-to-r from-primary to-primary-container text-white px-8 py-3 rounded-xl font-bold shadow-lg flex items-center gap-2 hover:scale-[1.02] active:scale-95 transition-all">
+            <span className="material-symbols-outlined">add_circle</span>
+            + New Invoice
+          </Link>
+        </div>
       </div>
 
       {/* Stats Grid */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
         <div className="bg-surface-container-low p-6 rounded-xl border-none">
           <p className="text-on-surface-variant text-xs uppercase font-bold tracking-widest mb-1">Total Outstanding</p>
-          <h3 className="text-3xl font-extrabold">{formatINR(totalOutstanding)}</h3>
+          <h3 className="text-3xl font-extrabold">{formatINR(stats.totalOutstanding)}</h3>
         </div>
         <div className="bg-surface-container-low p-6 rounded-xl border-none">
           <p className="text-on-surface-variant text-xs uppercase font-bold tracking-widest mb-1">Total Paid</p>
-          <h3 className="text-3xl font-extrabold text-tertiary-container">{formatINR(totalPaid)}</h3>
+          <h3 className="text-3xl font-extrabold text-tertiary-container">{formatINR(stats.totalPaid)}</h3>
         </div>
         <div className="bg-surface-container-low p-6 rounded-xl border-none">
           <p className="text-on-surface-variant text-xs uppercase font-bold tracking-widest mb-1">Pending Drafts</p>
-          <h3 className="text-3xl font-extrabold">{pendingDrafts}</h3>
+          <h3 className="text-3xl font-extrabold">{stats.pendingDrafts}</h3>
         </div>
       </div>
 
       {/* Data Table */}
       <div className="bg-surface-container-lowest rounded-xl shadow-sm overflow-hidden">
-        <div className="p-8 pb-4">
-          <h4 className="text-xl font-bold">Recent History</h4>
+        <div className="p-8 pb-4 flex justify-between items-center">
+          <h4 className="text-xl font-bold">Recent Invoices</h4>
         </div>
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse">
