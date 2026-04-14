@@ -20,6 +20,7 @@ export default function InvoiceForm({ initialData, mode, invoiceId }: InvoiceFor
   const [loading, setLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [isEmailing, setIsEmailing] = useState(false);
 
   const [clients, setClients] = useState<any[]>([]);
   const [logoPreview, setLogoPreview] = useState<string | null>(initialData?.logoUrl || initialData?.senderLogoUrl || null);
@@ -218,8 +219,63 @@ export default function InvoiceForm({ initialData, mode, invoiceId }: InvoiceFor
   };
 
   const handleEmail = async () => {
-    alert("Email send test");
-  }
+    if (!invoiceRef.current) return;
+
+    let defaultEmail = "";
+    const selectedClient = clients.find(c => c.id === invoice.clientId);
+    if (selectedClient?.email) defaultEmail = selectedClient.email;
+    else if (invoice.clientName) defaultEmail = invoice.clientName.toLowerCase().replace(/\s/g, '') + "@gmail.com";
+
+    const actualEmail = prompt(`Confirm recipient's email address:`, defaultEmail);
+    if (!actualEmail) return;
+
+    setIsEmailing(true);
+    try {
+      const { domToJpeg } = await import("modern-screenshot");
+      const { jsPDF } = await import("jspdf");
+
+      const dataUrl = await domToJpeg(invoiceRef.current, {
+        scale: 1.5,
+        backgroundColor: '#ffffff',
+        filter: (node) => {
+          if (node instanceof HTMLElement && node.classList.contains('print:hidden')) return false;
+          return true;
+        }
+      });
+
+      const pdf = new jsPDF("p", "mm", "a4");
+      const pdfWidth = pdf.internal.pageSize.getWidth();
+      const imgProps = pdf.getImageProperties(dataUrl);
+      const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
+      
+      pdf.addImage(dataUrl, "JPEG", 0, 0, pdfWidth, pdfHeight, undefined, 'FAST');
+      const pdfBlob = pdf.output("blob");
+
+      // Send to API
+      const formData = new FormData();
+      formData.append("pdf", pdfBlob, `${invoice.invoiceNumber}.pdf`);
+      formData.append("toEmail", actualEmail);
+      formData.append("clientName", invoice.clientName);
+      formData.append("invoiceNumber", invoice.invoiceNumber);
+
+      const res = await fetch("/api/user/invoices/send", {
+        method: "POST",
+        body: formData,
+      });
+
+      const result = await res.json();
+      if (result.success) {
+        alert("Email sent successfully to " + actualEmail);
+      } else {
+        alert("Failed to send email: " + result.message);
+      }
+
+    } catch (error: any) {
+      alert("An error occurred. Try downloading the PDF manually instead.");
+    } finally {
+      setIsEmailing(false);
+    }
+  };
 
   const inputStyles = "bg-transparent hover:bg-slate-50 focus:bg-blue-50 hover:outline hover:outline-1 hover:outline-slate-300 focus:outline focus:outline-2 focus:outline-blue-500/40 rounded transition-all px-1 -mx-1 w-full";
 
@@ -419,7 +475,7 @@ export default function InvoiceForm({ initialData, mode, invoiceId }: InvoiceFor
         
         <button onClick={handleEmail} className="flex items-center gap-2 px-5 py-2.5 text-sm font-bold text-blue-600 bg-blue-50 rounded-xl hover:bg-blue-100 transition-colors">
           <span className="material-symbols-outlined text-lg">mail</span>
-          Send Email
+          {isEmailing ? "Sending..." : "Send Email"}
         </button>
 
         <button onClick={() => handleDownloadPDF()} className="flex items-center gap-2 px-5 py-2.5 text-sm font-bold text-slate-600 bg-slate-100 rounded-xl hover:bg-slate-200">
