@@ -3,7 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { getUser } from "@/lib/auth";
 import { z } from "zod";
 
-export async function GET() {
+export async function GET(req: NextRequest) {
   try {
     const { user, error } = await getUser();
 
@@ -11,8 +11,19 @@ export async function GET() {
       return NextResponse.json({ success: false, message: error || "Unauthorized" }, { status: 401 });
     }
 
+    const search = req.nextUrl.searchParams.get("search");
+
+    const whereClause: any = { userId: user.id };
+    
+    if (search) {
+      whereClause.OR = [
+        { companyName: { contains: search, mode: "insensitive" } },
+        { email: { contains: search, mode: "insensitive" } },
+      ];
+    }
+
     const clients = await prisma.client.findMany({
-      where: { userId: user.id },
+      where: whereClause,
       orderBy: { createdAt: "desc" },
     });
 
@@ -24,7 +35,7 @@ export async function GET() {
 
 const clientSchema = z.object({
   companyName: z.string().min(1, "Company name is required"),
-  email: z.string().email("Invalid email address").optional().nullable(),
+  email: z.string().email("Email is required"),
   address: z.string().optional().nullable(),
   city: z.string().optional().nullable(),
   state: z.string().optional().nullable(),

@@ -55,7 +55,16 @@ export async function PUT(req: NextRequest) {
       }
 
       if (user.logoUrl) {
-        await deleteImage(user.logoUrl);
+        const isLogoInUse = await prisma.invoice.findFirst({
+          where: { 
+            userId: user.id,
+            senderLogoUrl: user.logoUrl 
+          }
+        });
+
+        if (!isLogoInUse) {
+          await deleteImage(user.logoUrl);
+        }
       }
       
       logoUrl = url;

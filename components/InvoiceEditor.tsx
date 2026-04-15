@@ -257,6 +257,9 @@ export default function InvoiceForm({ initialData, mode, invoiceId }: InvoiceFor
       formData.append("toEmail", actualEmail);
       formData.append("clientName", invoice.clientName);
       formData.append("invoiceNumber", invoice.invoiceNumber);
+      if (invoice.id){
+        formData.append("invoiceId", invoice.id);
+      }
 
       const res = await fetch("/api/user/invoices/send", {
         method: "POST",
@@ -437,8 +440,20 @@ export default function InvoiceForm({ initialData, mode, invoiceId }: InvoiceFor
             <div className="flex justify-between items-end">
               <div className="flex flex-col gap-3">
                 <div className="flex items-center gap-2 print:hidden">
-                  <input type="checkbox" id="qrToggle" checked={invoice.includeQrCode} onChange={(e) => setInvoice((prev: any) => ({ ...prev, includeQrCode: e.target.checked }))} className="w-4 h-4 text-blue-600 cursor-pointer" />
-                  <label htmlFor="qrToggle" className="text-xs font-bold uppercase tracking-wider text-slate-600 cursor-pointer">Enable UPI QR</label>
+                  {invoice.paymentUpiId && (
+                    <div className="flex items-center gap-2 print:hidden">
+                      <input 
+                        type="checkbox" 
+                        id="qrToggle" 
+                        checked={invoice.includeQrCode} 
+                        onChange={(e) => setInvoice((prev: any) => ({ ...prev, includeQrCode: e.target.checked }))} 
+                        className="w-4 h-4 text-blue-600 cursor-pointer" 
+                      />
+                      <label htmlFor="qrToggle" className="text-xs font-bold uppercase tracking-wider text-slate-600 cursor-pointer">
+                        Enable UPI QR
+                      </label>
+                    </div>
+                  )}
                 </div>
                 {invoice.includeQrCode && invoice.paymentUpiId && (
                   <div className="flex items-center gap-5 p-4 border-2 border-blue-100 bg-blue-50/40 rounded-xl w-max">

@@ -27,7 +27,7 @@ export async function GET( req: NextRequest, { params }: { params: Promise<{ cli
 
 const updateClientSchema = z.object({
   companyName: z.string().min(1).optional(),
-  email: z.string().email().optional().nullable(),
+  email: z.string().email("Email is required"),
   address: z.string().optional().nullable(),
   city: z.string().optional().nullable(),
   state: z.string().optional().nullable(),

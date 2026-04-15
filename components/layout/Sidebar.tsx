@@ -34,11 +34,7 @@ export default function Sidebar({ isOpen, setIsOpen }: { isOpen: boolean, setIsO
           ))}
         </nav>
         <div className="mt-auto pt-6 space-y-4">
-          <Link href="/user/invoices/new" onClick={() => setIsOpen(false)} className="w-full flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white py-3.5 rounded-xl font-bold transition-all shadow-lg shadow-blue-600/20 text-sm">
-            <span className="material-symbols-outlined text-[18px]">add</span>Create New Invoice
-          </Link>
           <div className="pt-2 space-y-1">
-            <button className="w-full flex items-center gap-3 px-4 py-2.5 text-slate-500 hover:text-slate-800 transition-all rounded-xl text-sm font-medium"><span className="material-symbols-outlined text-[20px]">help</span>Help Center</button>
             <button onClick={() => signOut({ callbackUrl: "/login" })} className="w-full flex items-center gap-3 px-4 py-2.5 text-slate-500 hover:text-red-600 hover:bg-red-50 transition-all rounded-xl text-sm font-medium"><span className="material-symbols-outlined text-[20px]">logout</span>Logout</button>
           </div>
         </div>

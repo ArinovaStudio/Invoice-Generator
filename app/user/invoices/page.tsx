@@ -3,11 +3,18 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import ConfirmModal from "@/components/ConfirmModal";
 
 export default function InvoicesListPage() {
   const router = useRouter();
   const [invoices, setInvoices] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+
+  const [deleteModal, setDeleteModal] = useState({
+    isOpen: false,
+    invoiceId: "",
+    invoiceNumber: "",
+  });
 
   const fetchInvoices = async () => {
     try {
@@ -23,12 +30,46 @@ export default function InvoicesListPage() {
 
   useEffect(() => { fetchInvoices(); }, []);
 
-  const handleDelete = async (id: string, invoiceNumber: string) => {
-    if (!confirm(`Are you sure you want to delete invoice ${invoiceNumber}?`)) return;
+  const handleStatusChange = async (id: string, newStatus: string) => {
+    setInvoices((prev) => prev.map((inv) => inv.id === id ? { ...inv, status: newStatus } : inv));
+
     try {
-      const res = await fetch(`/api/user/invoices/${id}`, { method: "DELETE" });
-      if (res.ok) setInvoices((prev) => prev.filter((inv) => inv.id !== id));
-    } catch (error) { console.error("Delete error:", error); }
+      const formData = new FormData();
+      formData.append("data", JSON.stringify({ status: newStatus }));
+
+      const res = await fetch(`/api/user/invoices/${id}`, {
+        method: "PUT",
+        body: formData,
+      });
+
+      if (!res.ok) {
+        const data = await res.json();
+        alert("Failed to update status: " + data.message);
+        fetchInvoices();
+      }
+    } catch (error) {
+      console.error("Status update error:", error);
+      fetchInvoices();
+    }
+  };
+
+  const triggerDelete = (id: string, invoiceNumber: string) => {
+    setDeleteModal({ isOpen: true, invoiceId: id, invoiceNumber });
+  };
+
+  const executeDelete = async () => {
+    try {
+      const res = await fetch(`/api/user/invoices/${deleteModal.invoiceId}`, { method: "DELETE" });
+      if (res.ok) {
+        setInvoices((prev) => prev.filter((inv) => inv.id !== deleteModal.invoiceId));
+      } else {
+        alert("Failed to delete invoice.");
+      }
+    } catch (error) { 
+      console.error("Delete error:", error); 
+    } finally {
+      setDeleteModal({ isOpen: false, invoiceId: "", invoiceNumber: "" });
+    }
   };
 
   const formatINR = (amount: number) => {
@@ -79,20 +120,28 @@ export default function InvoicesListPage() {
                     </td>
                     <td className="px-6 py-5 font-black text-slate-900">{formatINR(inv.totalAmount)}</td>
                     <td className="px-6 py-5">
-                      <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-tight
-                        ${inv.status === 'PAID' ? 'bg-emerald-50 text-emerald-600' : 
-                          inv.status === 'DRAFT' ? 'bg-slate-100 text-slate-500' : 
-                          inv.status === 'OVERDUE' ? 'bg-red-50 text-red-600' : 
-                          'bg-blue-50 text-blue-600'}`}
+                      <select
+                        value={inv.status}
+                        onChange={(e) => handleStatusChange(inv.id, e.target.value)}
+                        className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-tight outline-none cursor-pointer appearance-none text-center
+                          ${inv.status === 'PAID' ? 'bg-emerald-50 text-emerald-600' : 
+                            inv.status === 'DRAFT' ? 'bg-slate-100 text-slate-500' : 
+                            inv.status === 'OVERDUE' ? 'bg-red-50 text-red-600' : 
+                            inv.status === 'CANCELLED' ? 'bg-slate-800 text-white' :
+                            'bg-blue-50 text-blue-600'}`}
                       >
-                        {inv.status}
-                      </span>
+                        <option value="DRAFT">DRAFT</option>
+                        <option value="SENT">SENT</option>
+                        <option value="PAID">PAID</option>
+                        <option value="OVERDUE">OVERDUE</option>
+                        <option value="CANCELLED">CANCELLED</option>
+                      </select>
                     </td>
                     <td className="px-6 py-5 text-right">
                       <div className="flex justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                         <button onClick={() => router.push(`/user/invoices/${inv.id}?download=true`)} className="p-2 text-slate-400 hover:text-blue-600 rounded-lg hover:bg-blue-50"><span className="material-symbols-outlined text-[20px]">download</span></button>
                         <Link href={`/user/invoices/${inv.id}`} className="p-2 text-slate-400 hover:text-amber-600 rounded-lg hover:bg-amber-50"><span className="material-symbols-outlined text-[20px]">edit</span></Link>
-                        <button onClick={() => handleDelete(inv.id, inv.invoiceNumber)} className="p-2 text-slate-400 hover:text-red-600 rounded-lg hover:bg-red-50"><span className="material-symbols-outlined text-[20px]">delete</span></button>
+                        <button onClick={() => triggerDelete(inv.id, inv.invoiceNumber)} className="p-2 text-slate-400 hover:text-red-600 rounded-lg hover:bg-red-50"><span className="material-symbols-outlined text-[20px]">delete</span></button>
                       </div>
                     </td>
                   </tr>
@@ -102,6 +151,16 @@ export default function InvoicesListPage() {
           </table>
         </div>
       </div>
+
+      <ConfirmModal
+        isOpen={deleteModal.isOpen}
+        onClose={() => setDeleteModal({ isOpen: false, invoiceId: "", invoiceNumber: "" })}
+        onConfirm={executeDelete}
+        title="Delete Invoice"
+        message={`Are you sure you want to permanently delete invoice ${deleteModal.invoiceNumber}? This action cannot be undone.`}
+        confirmText="Delete Invoice"
+        isDanger={true}
+      />
     </div>
   );
 }
