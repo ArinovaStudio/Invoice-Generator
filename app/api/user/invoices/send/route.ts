@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { getUser } from "@/lib/auth";
 import { transporter } from "@/lib/email";
+import { prisma } from "@/lib/prisma";
 
 export async function POST(req: Request) {
   try {
@@ -14,6 +15,7 @@ export async function POST(req: Request) {
     const clientName = formData.get("clientName") as string | "Client";
     const invoiceNumber = formData.get("invoiceNumber") as string | "Invoice";
     const pdfFile = formData.get("pdf") as File | null;
+    const invoiceId = formData.get("invoiceId") as string | null; // optional to update invoice status
 
     if (!toEmail || toEmail === "null" || toEmail.trim() === "") {
       return NextResponse.json( { success: false, message: "Recipient email is required." }, { status: 400 } );
@@ -40,6 +42,13 @@ export async function POST(req: Request) {
         },
       ],
     });
+
+    if (invoiceId) {
+      await prisma.invoice.update({
+        where: { id: invoiceId, userId: user.id }, 
+        data: { status: "SENT" }
+      });
+    }
 
     return NextResponse.json({ success: true, message: "Invoice sent successfully" }, { status: 200 });
 
