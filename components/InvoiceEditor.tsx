@@ -152,7 +152,7 @@ export default function InvoiceForm({ initialData, mode, invoiceId }: InvoiceFor
 
   const removeItem = (index: number) => {
     if (invoice.items.length === 1) return;
-    const newItems = invoice.items.filter((_, i) => i !== index);
+    const newItems = invoice.items.filter((_: any, i: number) => i !== index);
     setInvoice((prev: any) => ({ ...prev, items: newItems }));
   };
 
