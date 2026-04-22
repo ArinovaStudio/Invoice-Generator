@@ -63,6 +63,12 @@ const invoiceSchema = z.object({
   clientZip: z.string().optional().nullable(),
   clientCountry: z.string().optional().nullable(),
 
+  tableDescLabel: z.string().default("Item Description"),
+  tableQtyLabel: z.string().default("Qty"),
+  tableRateLabel: z.string().default("Rate"),
+  tableTaxLabel: z.string().default("Tax %"),
+  tableAmountLabel: z.string().default("Amount"),
+
   notesTitle: z.string().default("Notes"),
   notes: z.string().optional().nullable(),
   termsTitle: z.string().default("Terms & Conditions"),
@@ -175,6 +181,12 @@ export async function POST(req: NextRequest) {
         notes: data.notes,
         termsTitle: data.termsTitle,
         terms: data.terms,
+
+        tableDescLabel: data.tableDescLabel,
+        tableQtyLabel: data.tableQtyLabel,
+        tableRateLabel: data.tableRateLabel,
+        tableTaxLabel: data.tableTaxLabel,
+        tableAmountLabel: data.tableAmountLabel,
 
         items: { create: processedItems }
       }

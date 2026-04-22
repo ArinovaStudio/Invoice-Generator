@@ -8,6 +8,7 @@ import { Check, Info, ExternalLink, Plus, Trash2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { QRCodeSVG } from "qrcode.react";
 import { useReactToPrint } from "react-to-print";
+import { currencies } from "@/lib/currencies";
 
 const themes = [
   { name: "black", color: "bg-black" },
@@ -51,6 +52,8 @@ export default function InvoiceLayout() {
   const invoiceRef = useRef<HTMLDivElement>(null);
 
   const [currentColor, setCurrentColor] = useState(themes[0]);
+  const [selectedCurrency, setSelectedCurrency] = useState(currencies[0]);
+  
   const [loading, setLoading] = useState(true);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [hasSavedUpi, setHasSavedUpi] = useState(false);
@@ -73,8 +76,15 @@ export default function InvoiceLayout() {
     invoiceNumber: `INV-${Date.now().toString().slice(-6)}`,
     issueDate: new Date().toISOString().split("T")[0],
     dueDate: new Date(Date.now() + 15 * 86400000).toISOString().split("T")[0],
-    items: [{ description: "", quantity: 1, rate: 0 }],
-    taxRate: 12,
+    
+    tableDescLabel: "Item Description",
+    tableQtyLabel: "Qty",
+    tableRateLabel: "Rate",
+    tableTaxLabel: "Tax %",
+    tableAmountLabel: "Amount",
+    
+    items: [{ description: "", quantity: 1, rate: 0, taxRate: 0 }],
+    
     notesTitle: "Notes",
     notes: "It was great doing business with you.",
     termsTitle: "Terms & Conditions",
@@ -104,7 +114,7 @@ export default function InvoiceLayout() {
             senderName: user.name || "",
             senderAddress: user.companyAddress || "",
             senderCityZip: `${user.city || ""} ${user.zip || ""}`.trim(),
-            senderCountry: user.country || "U.S.A",
+            senderCountry: user.country || "India",
           }));
         }
 
@@ -148,7 +158,7 @@ export default function InvoiceLayout() {
   const addItem = () => {
     setInvoice((prev) => ({
       ...prev,
-      items: [...prev.items, { description: "", quantity: 1, rate: 0 }],
+      items: [...prev.items, { description: "", quantity: 1, rate: 0, taxRate: 0 }],
     }));
   };
 
@@ -168,9 +178,19 @@ export default function InvoiceLayout() {
     }
   };
 
-  const subTotal = invoice.items.reduce((acc, item) => acc + item.quantity * item.rate, 0);
-  const taxTotal = subTotal * (invoice.taxRate / 100);
-  const total = subTotal + taxTotal;
+  // Calculate totals including per-item tax
+  const totals = invoice.items.reduce(
+    (acc, item) => {
+      const itemBase = item.quantity * item.rate;
+      const itemTax = itemBase * ((item.taxRate || 0) / 100);
+      return {
+        subTotal: acc.subTotal + itemBase,
+        taxTotal: acc.taxTotal + itemTax,
+        total: acc.total + itemBase + itemTax,
+      };
+    },
+    { subTotal: 0, taxTotal: 0, total: 0 }
+  );
 
   const handleSave = async (): Promise<boolean> => {
     try {
@@ -244,7 +264,7 @@ export default function InvoiceLayout() {
       const senderName = invoice.senderCompany || invoice.senderName || "Invoice Generator";
       formData.append("senderName", senderName);
 
-      // @ts-ignore - Assuming invoice.id exists if loaded from DB
+      // @ts-ignore
       if (invoice.id) formData.append("invoiceId", invoice.id); 
 
       const res = await fetch("/api/user/invoices/send", { method: "POST", body: formData });
@@ -340,16 +360,27 @@ export default function InvoiceLayout() {
 
               {/* Table */}
               <div className="border rounded-md overflow-hidden mt-8">
-                <div className={`grid grid-cols-12 ${currentColor.color} text-white text-sm font-medium p-2.5`}>
-                  <div className="col-span-6 pl-1">Item Description</div>
-                  <div className="col-span-2 text-center">Qty</div>
-                  <div className="col-span-2 text-right">Rate</div>
-                  <div className="col-span-2 text-right pr-1">Amount</div>
+                <div className={`grid grid-cols-12 ${currentColor.color} text-white text-sm font-medium p-1 items-center`}>
+                  <div className="col-span-5 pl-1">
+                    <input name="tableDescLabel" value={invoice.tableDescLabel} onChange={handleChange} className="bg-transparent hover:bg-white/20 focus:bg-white/20 focus:outline-none rounded px-1 -mx-1 w-full placeholder-white/70" />
+                  </div>
+                  <div className="col-span-2 px-1">
+                    <input name="tableQtyLabel" value={invoice.tableQtyLabel} onChange={handleChange} className="bg-transparent hover:bg-white/20 focus:bg-white/20 focus:outline-none rounded px-1 -mx-1 w-full text-center placeholder-white/70" />
+                  </div>
+                  <div className="col-span-2 px-1">
+                    <input name="tableRateLabel" value={invoice.tableRateLabel} onChange={handleChange} className="bg-transparent hover:bg-white/20 focus:bg-white/20 focus:outline-none rounded px-1 -mx-1 w-full text-right placeholder-white/70" />
+                  </div>
+                  <div className="col-span-1 px-1">
+                    <input name="tableTaxLabel" value={invoice.tableTaxLabel} onChange={handleChange} className="bg-transparent hover:bg-white/20 focus:bg-white/20 focus:outline-none rounded px-1 -mx-1 w-full text-center placeholder-white/70" />
+                  </div>
+                  <div className="col-span-2 pr-1 text-right">
+                    <input name="tableAmountLabel" value={invoice.tableAmountLabel} onChange={handleChange} className="bg-transparent hover:bg-white/20 focus:bg-white/20 focus:outline-none rounded px-1 -mx-1 w-full text-right placeholder-white/70" />
+                  </div>
                 </div>
 
                 {invoice.items.map((item, i) => (
                   <div key={i} className="grid grid-cols-12 text-sm p-2 border-t items-start group">
-                    <div className="col-span-6 pr-2">
+                    <div className="col-span-5 pr-2">
                       <InlineTextarea 
                         rows={1}
                         value={item.description} 
@@ -366,17 +397,26 @@ export default function InvoiceLayout() {
                         className="text-center"
                       />
                     </div>
-                    <div className="col-span-2 px-1">
+                    <div className="col-span-2 px-1 relative">
+                      <div className="absolute left-2 top-1/2 -translate-y-1/2 text-gray-400 print:hidden pointer-events-none">{selectedCurrency.symbol}</div>
                       <InlineInput 
                         type="number" 
                         value={item.rate || ""} 
                         onChange={(e: any) => handleItemChange(i, "rate", Number(e.target.value))} 
-                        className="text-right"
+                        className="text-right pl-6"
+                      />
+                    </div>
+                    <div className="col-span-1 px-1">
+                      <InlineInput 
+                        type="number" 
+                        value={item.taxRate || ""} 
+                        onChange={(e: any) => handleItemChange(i, "taxRate", Number(e.target.value))} 
+                        className="text-center"
                       />
                     </div>
                     <div className="col-span-2 text-right py-1 flex justify-end items-center gap-2">
                       <span className="font-medium text-gray-800">
-                        {(item.quantity * item.rate).toFixed(2)}
+                        {((item.quantity * item.rate) * (1 + (item.taxRate || 0)/100)).toFixed(2)}
                       </span>
                       <button 
                         onClick={() => removeItem(i)} 
@@ -443,7 +483,7 @@ export default function InvoiceLayout() {
                   {invoice.includeQrCode && invoice.paymentUpiId && (
                      <div className="mt-4 flex items-center gap-4 p-3 border rounded-lg bg-gray-50/50 w-max">
                         <div className="bg-white p-1.5 rounded border shadow-sm">
-                           <QRCodeSVG value={`upi://pay?pa=${invoice.paymentUpiId}&pn=${encodeURIComponent(invoice.senderCompany || invoice.senderName)}&am=${total.toFixed(2)}&cu=INR`} size={64} level="H" />
+                           <QRCodeSVG value={`upi://pay?pa=${invoice.paymentUpiId}&pn=${encodeURIComponent(invoice.senderCompany || invoice.senderName)}&am=${totals.total.toFixed(2)}&cu=${selectedCurrency.code}`} size={64} level="H" />
                         </div>
                         <div className="text-sm">
                            <p className="font-bold text-gray-800">Scan to Pay</p>
@@ -457,24 +497,15 @@ export default function InvoiceLayout() {
                 <div className="w-64 space-y-3 text-sm">
                   <div className="flex justify-between items-center">
                     <span className="text-gray-600">Sub Total</span>
-                    <span className="font-medium text-gray-800">{subTotal.toFixed(2)}</span>
+                    <span className="font-medium text-gray-800">{selectedCurrency.symbol}{totals.subTotal.toFixed(2)}</span>
                   </div>
                   <div className="flex justify-between items-center">
-                    <span className="text-gray-600 flex items-center">
-                      Tax (
-                      <InlineInput 
-                        type="number" 
-                        value={invoice.taxRate} 
-                        onChange={(e: any) => setInvoice(p => ({...p, taxRate: Number(e.target.value)}))} 
-                        className="w-8 text-center border-b border-dashed border-gray-300 mx-1 font-medium text-gray-800"
-                      />
-                      %)
-                    </span>
-                    <span className="font-medium text-gray-800">{taxTotal.toFixed(2)}</span>
+                    <span className="text-gray-600 flex items-center">Tax Total</span>
+                    <span className="font-medium text-gray-800">{selectedCurrency.symbol}{totals.taxTotal.toFixed(2)}</span>
                   </div>
                   <div className="flex justify-between font-bold text-base border-t pt-3 text-gray-900">
                     <span>Total</span>
-                    <span>${total.toFixed(2)}</span>
+                    <span>{selectedCurrency.symbol}{totals.total.toFixed(2)}</span>
                   </div>
                 </div>
               </div>
@@ -514,8 +545,23 @@ export default function InvoiceLayout() {
                   <div className="h-px bg-gray-100 pt-2" />
                 </div>
 
+                {/* Currency Selector */}
+                <div className="space-y-3 pt-2">
+                  <p className="text-sm font-medium text-gray-700">Currency</p>
+                  <select 
+                    value={selectedCurrency.code} 
+                    onChange={(e) => setSelectedCurrency(currencies.find(c => c.code === e.target.value) || currencies[0])}
+                    className="w-full text-sm border-gray-200 rounded-md p-2 focus:ring-blue-500 focus:border-blue-500 bg-gray-50 border outline-none cursor-pointer"
+                  >
+                    {currencies.map(c => (
+                      <option key={c.code} value={c.code}>{c.name} ({c.symbol})</option>
+                    ))}
+                  </select>
+                  <div className="h-px bg-gray-100 pt-2" />
+                </div>
+
                 {/* Templates */}
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-2 gap-3 pt-2">
                   {templates.map((t) => (
                     <div key={t.name} className="text-center space-y-2">
                       <div
@@ -557,12 +603,12 @@ export default function InvoiceLayout() {
                       <input
                          type="text"
                          placeholder="e.g. yourname@upi"
-                         className="w-full text-sm border-gray-200 rounded-md p-2 focus:ring-blue-500 focus:border-blue-500"
+                         className="w-full text-sm border-gray-200 rounded-md p-2 focus:ring-blue-500 focus:border-blue-500 bg-white"
                          value={invoice.paymentUpiId}
                          onChange={e => setInvoice(p => ({
                             ...p, 
                             paymentUpiId: e.target.value, 
-                            includeQrCode: !!e.target.value // Auto enable if they type
+                            includeQrCode: !!e.target.value 
                          }))}
                       />
                     </div>
@@ -586,7 +632,7 @@ export default function InvoiceLayout() {
                   <Button 
                     variant="outline" 
                     onClick={() => handleDownloadPDF()}
-                    className="w-full border-gray-200 text-gray-700 hover:bg-gray-50"
+                    className="w-full border-gray-200 text-gray-700 hover:bg-gray-50 bg-white"
                   >
                     Download PDF
                   </Button>

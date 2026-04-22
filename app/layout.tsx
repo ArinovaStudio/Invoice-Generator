@@ -1,7 +1,10 @@
 import type { Metadata } from "next";
-import { Open_Sans } from "next/font/google";
+import { Open_Sans, Geist } from "next/font/google";
 import "./globals.css";
 import { Providers } from "@/components/Providers";
+import { cn } from "@/lib/utils";
+
+const geist = Geist({subsets:['latin'],variable:'--font-sans'});
 
 const geistSans = Open_Sans({
   variable: "--font-geist-sans",
@@ -22,7 +25,7 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${geistSans.className} h-full antialiased`}
+      className={cn("h-full", "antialiased", geistSans.className, "font-sans", geist.variable)}
     >
       <head>
         <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Manrope:wght@700;800&display=swap" rel="stylesheet" />

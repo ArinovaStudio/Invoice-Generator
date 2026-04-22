@@ -65,6 +65,12 @@ const updateInvoiceSchema = z.object({
   termsTitle: z.string().optional(),
   terms: z.string().optional().nullable(),
 
+  tableDescLabel: z.string().optional(),
+  tableQtyLabel: z.string().optional(),
+  tableRateLabel: z.string().optional(),
+  tableTaxLabel: z.string().optional(),
+  tableAmountLabel: z.string().optional(),
+
   items: z.array(updateInvoiceItemSchema).optional(),
 });
 
