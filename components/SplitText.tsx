@@ -1,12 +1,12 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { ElementType, useEffect, useRef } from "react";
 import gsap from "gsap";
 
 interface SplitTextProps {
   text: string;
   className?: string;
-  as?: keyof JSX.IntrinsicElements;
+  as?: ElementType;
   delay?: number;
   stagger?: number;
   trigger?: boolean;
