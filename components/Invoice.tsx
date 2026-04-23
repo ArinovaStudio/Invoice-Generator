@@ -10,6 +10,12 @@ import { QRCodeSVG } from "qrcode.react";
 import { useReactToPrint } from "react-to-print";
 import { currencies } from "@/lib/currencies";
 
+export interface InvoiceLayoutProps {
+  initialData?: any;
+  mode?: "create" | "update";
+  invoiceId?: string;
+}
+
 const themes = [
   { name: "black", color: "bg-black" },
   { name: "orange", color: "bg-orange-500" },
@@ -47,7 +53,7 @@ const InlineTextarea = ({ className, emptyHidePrint, ...props }: any) => (
   />
 );
 
-export default function InvoiceLayout() {
+export default function InvoiceLayout({ initialData, mode = "create", invoiceId }: InvoiceLayoutProps) {
   const router = useRouter();
   const invoiceRef = useRef<HTMLDivElement>(null);
 
@@ -57,48 +63,71 @@ export default function InvoiceLayout() {
   const [loading, setLoading] = useState(true);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [hasSavedUpi, setHasSavedUpi] = useState(false);
-  const [isProcessing, setIsProcessing] = useState(false);
-  const [logoPreview, setLogoPreview] = useState<string | null>(null);
+  
+  // Specific Loading States
+  const [isSaving, setIsSaving] = useState(false);
+  const [isEmailing, setIsEmailing] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  const [clients, setClients] = useState<any[]>([]);
+  const [logoPreview, setLogoPreview] = useState<string | null>(initialData?.senderLogoUrl || null);
   const [logoFile, setLogoFile] = useState<File | null>(null);
 
-  const [invoice, setInvoice] = useState({
-    title: "INVOICE",
-    senderCompany: "",
-    senderName: "",
-    senderAddress: "",
-    senderCityZip: "",
-    senderCountry: "",
-    clientCompany: "",
-    clientName: "",
-    clientAddress: "",
-    clientCityZip: "",
-    clientCountry: "",
-    invoiceNumber: `INV-${Date.now().toString().slice(-6)}`,
-    issueDate: new Date().toISOString().split("T")[0],
-    dueDate: new Date(Date.now() + 15 * 86400000).toISOString().split("T")[0],
+  const [invoice, setInvoice] = useState(() => {
+    if (initialData) {
+      return {
+        ...initialData,
+        clientId: initialData.clientId || "",
+        tableDescLabel: initialData.tableDescLabel || "Item Description",
+        tableQtyLabel: initialData.tableQtyLabel || "Qty",
+        tableRateLabel: initialData.tableRateLabel || "Rate",
+        tableTaxLabel: initialData.tableTaxLabel || "Tax %",
+        tableAmountLabel: initialData.tableAmountLabel || "Amount",
+        items: initialData.items?.length ? initialData.items : [{ description: "", quantity: 1, rate: 0, taxRate: 0 }],
+      };
+    }
     
-    tableDescLabel: "Item Description",
-    tableQtyLabel: "Qty",
-    tableRateLabel: "Rate",
-    tableTaxLabel: "Tax %",
-    tableAmountLabel: "Amount",
-    
-    items: [{ description: "", quantity: 1, rate: 0, taxRate: 0 }],
-    
-    notesTitle: "Notes",
-    notes: "It was great doing business with you.",
-    termsTitle: "Terms & Conditions",
-    terms: "Please make the payment by the due date.",
-    paymentUpiId: "",
-    includeQrCode: false,
+    return {
+      title: "INVOICE",
+      senderCompany: "",
+      senderName: "",
+      senderAddress: "",
+      senderCityZip: "",
+      senderCountry: "",
+      clientId: "",
+      clientCompany: "",
+      clientName: "",
+      clientAddress: "",
+      clientCityZip: "",
+      clientCountry: "",
+      invoiceNumber: `INV-${Date.now().toString().slice(-6)}`,
+      issueDate: new Date().toISOString().split("T")[0],
+      dueDate: new Date(Date.now() + 15 * 86400000).toISOString().split("T")[0],
+      
+      tableDescLabel: "Item Description",
+      tableQtyLabel: "Qty",
+      tableRateLabel: "Rate",
+      tableTaxLabel: "Tax %",
+      tableAmountLabel: "Amount",
+      
+      items: [{ description: "", quantity: 1, rate: 0, taxRate: 0 }],
+      
+      notesTitle: "Notes",
+      notes: "It was great doing business with you.",
+      termsTitle: "Terms & Conditions",
+      terms: "Please make the payment by the due date.",
+      paymentUpiId: "",
+      includeQrCode: false,
+    };
   });
 
   useEffect(() => {
     const fetchDefaults = async () => {
       try {
-        const [profileRes, paymentRes] = await Promise.all([
+        const [profileRes, paymentRes, clientsRes] = await Promise.all([
           fetch("/api/user/profile"),
           fetch("/api/user/payment"),
+          fetch("/api/user/clients")
         ]);
 
         if (profileRes.ok) {
@@ -106,28 +135,36 @@ export default function InvoiceLayout() {
           const profileData = await profileRes.json();
           const user = profileData.profile || {};
           
-          if (user.logoUrl) setLogoPreview(user.logoUrl);
-          
-          setInvoice((prev) => ({
-            ...prev,
-            senderCompany: user.companyName || "",
-            senderName: user.name || "",
-            senderAddress: user.companyAddress || "",
-            senderCityZip: `${user.city || ""} ${user.zip || ""}`.trim(),
-            senderCountry: user.country || "India",
-          }));
+          if (mode === "create") {
+            if (user.logoUrl) setLogoPreview(user.logoUrl);
+            setInvoice((prev: any) => ({
+              ...prev,
+              senderCompany: user.companyName || "",
+              senderName: user.name || "",
+              senderAddress: user.companyAddress || "",
+              senderCityZip: `${user.city || ""} ${user.zip || ""}`.trim(),
+              senderCountry: user.country || "India",
+            }));
+          }
         }
 
         if (paymentRes.ok) {
           const paymentData = await paymentRes.json();
           if (paymentData.paymentDetails?.upiId) {
             setHasSavedUpi(true);
-            setInvoice((prev) => ({
-              ...prev,
-              paymentUpiId: paymentData.paymentDetails.upiId,
-              includeQrCode: true,
-            }));
+            if (mode === "create") {
+              setInvoice((prev: any) => ({
+                ...prev,
+                paymentUpiId: paymentData.paymentDetails.upiId,
+                includeQrCode: true,
+              }));
+            }
           }
+        }
+
+        if (clientsRes.ok) {
+           const clientsData = await clientsRes.json();
+           setClients(clientsData.clients || []);
         }
       } catch (error) {
         console.error("Failed to load user defaults", error);
@@ -136,7 +173,7 @@ export default function InvoiceLayout() {
       }
     };
     fetchDefaults();
-  }, []);
+  }, [mode]);
 
   const handleDownloadPDF = useReactToPrint({
     contentRef: invoiceRef,
@@ -146,17 +183,50 @@ export default function InvoiceLayout() {
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
-    setInvoice((prev) => ({ ...prev, [name]: value }));
+    if (name.startsWith("client")) {
+       // If user types manually, unlink the saved clientId
+       setInvoice((prev: any) => ({ ...prev, [name]: value, clientId: "" }));
+    } else {
+       setInvoice((prev: any) => ({ ...prev, [name]: value }));
+    }
+  };
+
+  const handleClientSelect = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const selectedId = e.target.value;
+    if (!selectedId) {
+      setInvoice((prev: any) => ({ 
+         ...prev, 
+         clientId: "", 
+         clientCompany: "", 
+         clientName: "", 
+         clientAddress: "", 
+         clientCityZip: "", 
+         clientCountry: "India" 
+      }));
+      return;
+    }
+    const client = clients.find(c => c.id === selectedId);
+    if (client) {
+      setInvoice((prev: any) => ({
+        ...prev,
+        clientId: client.id,
+        clientCompany: client.companyName || "",
+        clientName: client.contactName || client.name || "",
+        clientAddress: client.address || "",
+        clientCityZip: `${client.city || ""} ${client.state || ""} ${client.zip || ""}`.trim(),
+        clientCountry: client.country || "India",
+      }));
+    }
   };
 
   const handleItemChange = (index: number, field: string, value: string | number) => {
     const newItems = [...invoice.items];
     newItems[index] = { ...newItems[index], [field]: value };
-    setInvoice((prev) => ({ ...prev, items: newItems }));
+    setInvoice((prev: any) => ({ ...prev, items: newItems }));
   };
 
   const addItem = () => {
-    setInvoice((prev) => ({
+    setInvoice((prev: any) => ({
       ...prev,
       items: [...prev.items, { description: "", quantity: 1, rate: 0, taxRate: 0 }],
     }));
@@ -164,9 +234,9 @@ export default function InvoiceLayout() {
 
   const removeItem = (index: number) => {
     if (invoice.items.length === 1) return;
-    setInvoice((prev) => ({
+    setInvoice((prev: any) => ({
       ...prev,
-      items: prev.items.filter((_, i) => i !== index),
+      items: prev.items.filter((_: any, i: number) => i !== index),
     }));
   };
 
@@ -178,9 +248,8 @@ export default function InvoiceLayout() {
     }
   };
 
-  // Calculate totals including per-item tax
   const totals = invoice.items.reduce(
-    (acc, item) => {
+    (acc: any, item: any) => {
       const itemBase = item.quantity * item.rate;
       const itemTax = itemBase * ((item.taxRate || 0) / 100);
       return {
@@ -195,15 +264,30 @@ export default function InvoiceLayout() {
   const handleSave = async (): Promise<boolean> => {
     try {
       const formData = new FormData();
-      formData.append("data", JSON.stringify(invoice));
+      
+      const dataToSave = { ...invoice };
+
+      if (!dataToSave.clientId || dataToSave.clientId === "") {
+        delete dataToSave.clientId;
+      }
+
+      formData.append("data", JSON.stringify(dataToSave));
       if (logoFile) formData.append("logo", logoFile);
 
-      const res = await fetch("/api/user/invoices", { method: "POST", body: formData });
-      if (!res.ok) throw new Error("Failed to save");
+      const url = mode === "create" ? "/api/user/invoices" : `/api/user/invoices/${invoiceId}`;
+      const method = mode === "create" ? "POST" : "PUT";
+
+      const res = await fetch(url, { method, body: formData });
+      
+      if (!res.ok) {
+        const errorData = await res.json();
+        throw new Error(errorData.message || "Failed to save");
+      }
+      
       return true;
     } catch (error) {
       console.error(error);
-      alert("Failed to save invoice.");
+      alert("Failed to save invoice. Check the console for exact backend errors.");
       return false;
     }
   };
@@ -264,8 +348,7 @@ export default function InvoiceLayout() {
       const senderName = invoice.senderCompany || invoice.senderName || "Invoice Generator";
       formData.append("senderName", senderName);
 
-      // @ts-ignore
-      if (invoice.id) formData.append("invoiceId", invoice.id); 
+      if (invoiceId || invoice.id) formData.append("invoiceId", invoiceId || invoice.id); 
 
       const res = await fetch("/api/user/invoices/send", { method: "POST", body: formData });
       const result = await res.json();
@@ -279,16 +362,40 @@ export default function InvoiceLayout() {
     }
   };
 
-  const handleActionClick = async () => {
-    setIsProcessing(true);
-    if (isLoggedIn) {
-      const saved = await handleSave();
-      if (saved) await handleSendEmail();
-    } else {
-      await handleSendEmail();
+  const handleSaveClick = async () => {
+    setIsSaving(true);
+    const success = await handleSave();
+    if (success) {
+      alert(mode === "create" ? "Invoice Saved!" : "Invoice Updated!");
     }
-    setIsProcessing(false);
+    setIsSaving(false);
   };
+
+  const handleEmailClick = async () => {
+    setIsEmailing(true);
+    await handleSendEmail();
+    setIsEmailing(false);
+  };
+
+  const handleDelete = async () => {
+    if (!confirm("Are you sure you want to delete this invoice?")) return;
+    setIsDeleting(true);
+    try {
+      const res = await fetch(`/api/user/invoices/${invoiceId}`, { method: "DELETE" });
+      if (res.ok) {
+        router.push("/user/invoices");
+      } else {
+        alert("Failed to delete invoice");
+      }
+    } catch (error) {
+      console.error(error);
+      alert("An error occurred while deleting.");
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
+  const isAnyActionProcessing = isSaving || isEmailing || isDeleting;
 
   return (
     <div className="w-full py-10 px-6 bg-slate-50 min-h-screen">
@@ -378,7 +485,7 @@ export default function InvoiceLayout() {
                   </div>
                 </div>
 
-                {invoice.items.map((item, i) => (
+                {invoice.items.map((item: any, i: number) => (
                   <div key={i} className="grid grid-cols-12 text-sm p-2 border-t items-start group">
                     <div className="col-span-5 pr-2">
                       <InlineTextarea 
@@ -527,6 +634,24 @@ export default function InvoiceLayout() {
                   <div className="h-px bg-gray-100 mt-4" />
                 </div>
 
+                {/* Load Client Dropdown (Only for Logged-In Users) */}
+                {isLoggedIn && clients.length > 0 && (
+                  <div className="space-y-3">
+                    <p className="text-sm font-medium text-gray-700">Load Client</p>
+                    <select 
+                      value={invoice.clientId || ""} 
+                      onChange={handleClientSelect}
+                      className="w-full text-sm border-gray-200 rounded-md p-2 focus:ring-blue-500 focus:border-blue-500 bg-gray-50 border outline-none cursor-pointer"
+                    >
+                      <option value="">-- Select saved client --</option>
+                      {clients.map(c => (
+                        <option key={c.id} value={c.id}>{c.companyName}</option>
+                      ))}
+                    </select>
+                    <div className="h-px bg-gray-100 pt-2" />
+                  </div>
+                )}
+
                 {/* Theme */}
                 <div className="space-y-3">
                   <p className="text-sm font-medium text-gray-700">Theme Color</p>
@@ -592,7 +717,7 @@ export default function InvoiceLayout() {
                       <input 
                         type="checkbox" 
                         checked={invoice.includeQrCode} 
-                        onChange={e => setInvoice(p => ({...p, includeQrCode: e.target.checked}))} 
+                        onChange={e => setInvoice((p: any) => ({...p, includeQrCode: e.target.checked}))} 
                         className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
                       />
                       Include UPI QR Code
@@ -605,7 +730,7 @@ export default function InvoiceLayout() {
                          placeholder="e.g. yourname@upi"
                          className="w-full text-sm border-gray-200 rounded-md p-2 focus:ring-blue-500 focus:border-blue-500 bg-white"
                          value={invoice.paymentUpiId}
-                         onChange={e => setInvoice(p => ({
+                         onChange={e => setInvoice((p: any) => ({
                             ...p, 
                             paymentUpiId: e.target.value, 
                             includeQrCode: !!e.target.value 
@@ -617,25 +742,57 @@ export default function InvoiceLayout() {
 
                 <div className="h-px bg-gray-100" />
 
-                {/* Buttons */}
+                {/* Action Buttons */}
                 <div className="flex flex-col gap-3">
-                  <Button 
-                    onClick={handleActionClick} 
-                    disabled={isProcessing}
-                    className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium shadow-sm transition-all"
-                  >
-                    {isProcessing 
-                      ? "Processing..." 
-                      : (isLoggedIn ? "Save and Send" : "Send Email")}
-                  </Button>
+                  
+                  {isLoggedIn ? (
+                    <>
+                      <Button 
+                        onClick={handleSaveClick} 
+                        disabled={isAnyActionProcessing}
+                        className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium shadow-sm transition-all"
+                      >
+                        {isSaving ? "Saving..." : (mode === "update" ? "Update Invoice" : "Save Invoice")}
+                      </Button>
+                      
+                      <Button 
+                        onClick={handleEmailClick} 
+                        disabled={isAnyActionProcessing}
+                        variant="outline"
+                        className="w-full border-blue-200 text-blue-700 hover:bg-blue-50 bg-white"
+                      >
+                        {isEmailing ? "Sending..." : "Send Email"}
+                      </Button>
+                    </>
+                  ) : (
+                    <Button 
+                      onClick={handleEmailClick} 
+                      disabled={isAnyActionProcessing}
+                      className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium shadow-sm transition-all"
+                    >
+                      {isEmailing ? "Sending..." : "Send Email"}
+                    </Button>
+                  )}
 
                   <Button 
                     variant="outline" 
                     onClick={() => handleDownloadPDF()}
+                    disabled={isAnyActionProcessing}
                     className="w-full border-gray-200 text-gray-700 hover:bg-gray-50 bg-white"
                   >
                     Download PDF
                   </Button>
+
+                  {mode === "update" && (
+                    <Button 
+                      variant="outline" 
+                      onClick={handleDelete}
+                      disabled={isAnyActionProcessing}
+                      className="w-full mt-2 border-red-200 text-red-600 hover:bg-red-50 hover:text-red-700 bg-white"
+                    >
+                      {isDeleting ? "Deleting..." : "Delete Invoice"}
+                    </Button>
+                  )}
                 </div>
               </CardContent>
             </Card>
