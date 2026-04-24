@@ -105,12 +105,13 @@ export default function InvoiceLayout({ initialData, mode = "create", invoiceId 
       clientCity: "",
       clientState: "",
       clientZip: "",
-      clientCountry: "",
+      clientCountry: "IN",
       invoiceNumber: `INV-${Date.now().toString().slice(-6)}`,
       issueDate: new Date().toISOString().split("T")[0],
       dueDate: new Date(Date.now() + 15 * 86400000).toISOString().split("T")[0],
 
       tableDescLabel: "Item Description",
+      tableHsnLabel: "HSN",
       tableQtyLabel: "Qty",
       tableRateLabel: "Rate",
       tableTaxLabel: "Tax %",
@@ -501,8 +502,99 @@ export default function InvoiceLayout({ initialData, mode = "create", invoiceId 
                   <InlineInput name="senderName" placeholder="Your Name" value={invoice.senderName} onChange={handleChange} />
                   <InlineInput name="senderAddress" placeholder="Company's Address" value={invoice.senderAddress} onChange={handleChange} />
                   <InlineInput name="senderGSTIN" placeholder="Company's GSTIN" value={invoice.senderGSTIN} onChange={handleChange} />
-                  <InlineInput name="senderCityZip" placeholder="City, State Zip" value={invoice.senderCityZip} onChange={handleChange} />
-                  <InlineInput name="senderCountry" placeholder="Country" value={invoice.senderCountry} onChange={handleChange} />
+                  {/* Country Dropdown */}
+                  <select
+                    name="clientCountry"
+                    value={invoice.clientCountry || "IN"}
+                    onChange={handleChange}
+                    className="w-full bg-transparent hover:bg-slate-50 focus:bg-blue-50 focus:outline-none focus:ring-1 focus:ring-blue-500/50 rounded px-1 text-gray-700"
+                  >
+                    <option value="">Select Country</option>
+
+                    {Country.getAllCountries().map((country) => (
+                      <option key={country.isoCode} value={country.isoCode}>
+                        {country.name}
+                      </option>
+                    ))}
+                  </select>
+
+                  {/* State Dropdown */}
+                  <select
+                    name="clientState"
+                    value={invoice.clientState}
+                    onChange={handleChange}
+                    disabled={!invoice.clientCountry}
+                    className="w-full bg-transparent hover:bg-slate-50 focus:bg-blue-50 focus:outline-none focus:ring-1 focus:ring-blue-500/50 rounded px-1 text-gray-700 disabled:opacity-50"
+                  >
+                    <option value="">Select State</option>
+
+                    {State.getStatesOfCountry(invoice.clientCountry).map((state) => (
+                      <option key={state.isoCode} value={state.isoCode}>
+                        {state.name}
+                      </option>
+                    ))}
+                  </select>
+
+                  {/* City Dropdown */}
+                  <select
+                    name="clientCity"
+                    value={invoice.clientCity}
+                    onChange={handleChange}
+                    disabled={!invoice.clientState}
+                    className="w-full bg-transparent hover:bg-slate-50 focus:bg-blue-50 focus:outline-none focus:ring-1 focus:ring-blue-500/50 rounded px-1 text-gray-700 disabled:opacity-50"
+                  >
+                    <option value="">Select City</option>
+
+                    {City.getCitiesOfState(
+                      invoice.clientCountry,
+                      invoice.clientState
+                    ).map((city) => (
+                      <option key={city.name} value={city.name}>
+                        {city.name}
+                      </option>
+                    ))}
+                  </select>
+
+                  {/* ZIP / Postal Code */}
+                  <div>
+                    <InlineInput
+                      name="clientZip"
+                      placeholder="Client ZIP / Postal Code"
+                      value={invoice.clientZip}
+                      onChange={handleChange}
+                      onBlur={() => {
+                        if (!invoice.clientZip || !invoice.clientCountry) {
+                          setZipError("");
+                          return;
+                        }
+
+                        try {
+                          const isValid = validator.isPostalCode(
+                            invoice.clientZip,
+                            invoice.clientCountry as any
+                          );
+
+                          if (!isValid) {
+                            setZipError("Invalid ZIP / Postal Code");
+                          } else {
+                            setZipError("");
+                          }
+                        } catch {
+                          setZipError("");
+                        }
+                      }}
+                      className={cn(
+                        zipError
+                          ? "border border-red-400 focus:ring-red-500"
+                          : ""
+                      )}
+                    />
+                    {zipError && (
+                      <p className="text-xs text-red-500 mt-1">
+                        {zipError}
+                      </p>
+                    )}
+                  </div>
                 </div>
 
                 <div className="text-right w-1/2">
@@ -566,7 +658,7 @@ export default function InvoiceLayout({ initialData, mode = "create", invoiceId 
                   {/* Country Dropdown */}
                   <select
                     name="clientCountry"
-                    value={invoice.clientCountry}
+                    value={invoice.clientCountry || "IN"}
                     onChange={handleChange}
                     className="w-full bg-transparent hover:bg-slate-50 focus:bg-blue-50 focus:outline-none focus:ring-1 focus:ring-blue-500/50 rounded px-1 text-gray-700"
                   >
@@ -786,7 +878,7 @@ export default function InvoiceLayout({ initialData, mode = "create", invoiceId 
                   </div>
 
                   {/* Tax */}
-                  <div className="col-span-1 text-center">
+                  <div className="col-span-2 text-center">
                     <input
                       name="tableTaxLabel"
                       value={invoice.tableTaxLabel}
@@ -797,7 +889,7 @@ export default function InvoiceLayout({ initialData, mode = "create", invoiceId 
                   </div>
 
                   {/* HSN */}
-                  <div className="col-span-2 text-center px-1">
+                  <div className="col-span-1 text-center px-1">
                     <input
                       name="tableHsnLabel"
                       value={invoice.tableHsnLabel}
@@ -808,7 +900,7 @@ export default function InvoiceLayout({ initialData, mode = "create", invoiceId 
                   </div>
 
                   {/* Amount */}
-                  <div className="col-span-3 text-right pl-2">
+                  <div className="col-span-2 text-right pl-2">
                     <input
                       name="tableAmountLabel"
                       value={invoice.tableAmountLabel}
@@ -823,7 +915,7 @@ export default function InvoiceLayout({ initialData, mode = "create", invoiceId 
                 {invoice.items.map((item: any, i: number) => (
                   <div
                     key={i}
-                    className="grid grid-cols-14 text-sm py-2 px-4 border-t items-start group"
+                    className="grid grid-cols-13 text-sm py-2 px-4 border-t items-start group"
                   >
                     {/* Description */}
                     <div className="col-span-5 pr-2">
@@ -867,7 +959,7 @@ export default function InvoiceLayout({ initialData, mode = "create", invoiceId 
                     </div>
 
                     {/* Tax */}
-                    <div className="col-span-1 px-1">
+                    <div className="col-span-2 px-1">
                       <InlineInput
                         type="number"
                         value={item.taxRate || ""}
@@ -879,7 +971,7 @@ export default function InvoiceLayout({ initialData, mode = "create", invoiceId 
                     </div>
 
                     {/* HSN */}
-                    <div className="col-span-2 px-1">
+                    <div className="col-span-1 px-1">
                       <InlineInput
                         value={item.hsn || ""}
                         onChange={(e: any) =>
@@ -891,7 +983,7 @@ export default function InvoiceLayout({ initialData, mode = "create", invoiceId 
                     </div>
 
                     {/* Amount */}
-                    <div className="col-span-3 text-right py-1 flex justify-end items-center gap-2">
+                    <div className="col-span-2 text-right py-1 flex justify-end items-center gap-2">
                       <span className="font-medium text-gray-800">
                         {(
                           item.quantity *
@@ -992,10 +1084,9 @@ export default function InvoiceLayout({ initialData, mode = "create", invoiceId 
                 </div> */}
               </div>
 
-              <div className="flex justify-between items-start mt-8">
+              <div className="flex justify-between items-start mt-8 gap-8">
                 {/* Left Section */}
-                <div className="w-[50%] space-y-6">
-                  {/* Terms */}
+                <div className="flex-1 max-w-[50%]">
                   <div>
                     <InlineInput
                       name="termsTitle"
@@ -1010,7 +1101,7 @@ export default function InvoiceLayout({ initialData, mode = "create", invoiceId 
                       name="terms"
                       value={invoice.terms}
                       onChange={handleChange}
-                      className="text-sm text-gray-600 h-10"
+                      className="text-sm text-gray-600 min-h-[60px]"
                       placeholder="Add terms and conditions..."
                       emptyHidePrint
                     />
@@ -1018,34 +1109,37 @@ export default function InvoiceLayout({ initialData, mode = "create", invoiceId 
                 </div>
 
                 {/* Right Section */}
-                <div className="w-64 space-y-4">
-                  {/* QR Code → moved to top of totals */}
-                  {invoice.includeQrCode && invoice.paymentUpiId && (
-                    <div className="flex items-center gap-4 p-3 border rounded-lg bg-gray-50/50">
-                      <div className="w-full">
-                        <div className="text-sm flex gap-3">
-                          <p className="font-bold text-gray-800">
-                            Scan to Pay
-                          </p>
-                          <p className="text-gray-500 font-mono text-xs mt-0.5">
-                            {invoice.paymentUpiId}
-                          </p>
-                        </div>
+                <div className="shrink-0 space-y-5 -mt-6 ">
+                  {/* QR Card */}
+                  <div className="flex-col justify-end">
+                    <div>
+                      {invoice.includeQrCode && invoice.paymentUpiId && (
+                        <div className=" rounded-2xl p-4 bg-white">
+                          {/* Top Row */}
+                          <div className="flex items-center justify-between mb-3">
+                            <p className="text-gray-400 font-normal text-sm uppercase w-full text-center">
+                              Scan to Pay
+                            </p>
 
-                        <div className="flex gap-8">
-                          <div className=" p-1.5 rounded">
-                            <QRCodeSVG
-                              value={`upi://pay?pa=${invoice.paymentUpiId}&pn=${encodeURIComponent(
-                                invoice.senderCompany || invoice.senderName
-                              )}&am=${totals.total.toFixed(2)}&cu=${selectedCurrency.code}`}
-                              size={64}
-                              level="H"
-                            />
+                            {/* <p className="text-gray-500 font-mono text-xs truncate max-w-[130px]">
+                          {invoice.paymentUpiId}
+                        </p> */}
                           </div>
-                          <div className="flex items-center">
-                            {/* <button className="bg-orange-500 py-1 px-4 rounded-md cursor-pointer text-white text-sm hover:bg-orange-600 transition-colors">
-                              Tap to pay
-                            </button> */}
+
+                          {/* QR + Button */}
+                          <div className="flex-col items-center justify-between">
+                            <div className="bg-white rounded-lg mb-3">
+                              <QRCodeSVG
+                                value={`upi://pay?pa=${invoice.paymentUpiId}&pn=${encodeURIComponent(
+                                  invoice.senderCompany || invoice.senderName
+                                )}&am=${totals.total.toFixed(2)}&cu=${selectedCurrency.code}`}
+                                size={162}
+                                level="H"
+                              />
+                            </div>
+                            <p className="text-gray-500 font-mono text-xs truncate text-center mb-3">
+                              {invoice.paymentUpiId}
+                            </p>
                             <button
                               type="button"
                               onClick={() => {
@@ -1058,78 +1152,88 @@ export default function InvoiceLayout({ initialData, mode = "create", invoiceId 
                                 window.location.href = upiLink;
                               }}
                               className="
-                              bg-orange-500
-                              py-1
-                              px-4
-                              rounded-md
-                              cursor-pointer
-                              text-white
-                              text-sm
-                              hover:bg-orange-600
-                              transition-colors
+                          bg-orange-500
+                          hover:bg-orange-600
+                          text-white
+                          text-sm
+                          font-medium
+                          px-13
+                          py-2.5
+                          rounded-md
+                          cursor-pointer
+                          border
+                          border-orange-400
+                          transition-all
+                          duration-300
+                          whitespace-nowrap
+                          shadow-[6px_6px_12px_rgba(180,120,40,0.25),-6px_-6px_12px_rgba(255,255,255,0.9)]
+                          active:shadow-[inset_4px_4px_12px_rgba(180,120,40,0.25),inset_-4px_-4px_12px_rgba(255,255,255,0.8)]
+                          active:text-orange-100
   "
                             >
                               Tap to Pay
                             </button>
                           </div>
                         </div>
+                      )}
+                    </div>
+
+                    <div>
+                      {/* Totals */}
+                      <div className="space-y-3 text-sm">
+                        <div className="flex justify-between items-center  w-[290px]">
+                          <span className="text-gray-600">
+                            Sub Total
+                          </span>
+                          <span className="font-medium text-gray-800">
+                            {selectedCurrency.symbol}
+                            {totals.subTotal.toFixed(2)}
+                          </span>
+                        </div>
+
+                        <div className="flex justify-between items-center">
+                          <span className="text-gray-600">
+                            Tax Total
+                          </span>
+                          <span className="font-medium text-gray-800">
+                            {selectedCurrency.symbol}
+                            {totals.taxTotal.toFixed(2)}
+                          </span>
+                        </div>
+
+                        <div className="flex justify-between font-bold text-base border-t pt-3 text-gray-900">
+                          <span>Total</span>
+                          <span>
+                            {selectedCurrency.symbol}
+                            {totals.total.toFixed(2)}
+                          </span>
+                        </div>
                       </div>
-                    </div>
-                  )}
-
-                  {/* Calculation Totals */}
-                  <div className="space-y-3 text-sm">
-                    <div className="flex justify-between items-center">
-                      <span className="text-gray-600">
-                        Sub Total
-                      </span>
-                      <span className="font-medium text-gray-800">
-                        {selectedCurrency.symbol}
-                        {totals.subTotal.toFixed(2)}
-                      </span>
-                    </div>
-
-                    <div className="flex justify-between items-center">
-                      <span className="text-gray-600">
-                        Tax Total
-                      </span>
-                      <span className="font-medium text-gray-800">
-                        {selectedCurrency.symbol}
-                        {totals.taxTotal.toFixed(2)}
-                      </span>
-                    </div>
-
-                    <div className="flex justify-between font-bold text-base border-t pt-3 text-gray-900">
-                      <span>Total</span>
-                      <span>
-                        {selectedCurrency.symbol}
-                        {totals.total.toFixed(2)}
-                      </span>
                     </div>
                   </div>
                 </div>
               </div>
 
               <div className="mt-10 border-t border-gray-300">
-                <div className="flex items-center justify-center gap-5">
+                <div className="flex items-center justify-center gap-5 mt-6">
                   {/* Created By Text */}
                   <div className="flex flex-col items-end">
-                    <span className="text-sm font-semibold tracking-[0.18em] text-gray-700 uppercase">
+                    <span className="text-xs font-semibold tracking-[0.18em] text-gray-700 uppercase">
                       Created By
                     </span>
                   </div>
 
                   {/* Divider */}
-                  <div className="h-10 w-px bg-gray-400" />
+                  <div className="h-8 w-px bg-gray-400 " />
 
                   {/* Logo */}
                   <div className="flex items-center">
                     <img
-                      src="/logo.png"
+                      src="/logo_transparent.png"
                       alt="Logo"
                       width={160}
                       height={50}
-                      className="h-30  w-auto object-contain"
+                      className="h-8  w-auto object-contain"
                     />
                   </div>
                 </div>
@@ -1385,26 +1489,6 @@ export default function InvoiceLayout({ initialData, mode = "create", invoiceId 
                       </p>
                     </div>
                   )}
-
-                  <div className="space-y-2 bg-gray-50 p-3 rounded-lg border border-gray-100">
-                    <label className="text-xs font-medium text-gray-600 block">
-                      UPI ID for Payment QR
-                    </label>
-
-                    <input
-                      type="text"
-                      placeholder="e.g. yourname@upi"
-                      className="w-full text-sm border-gray-200 rounded-md p-2 focus:ring-blue-500 focus:border-blue-500 bg-white"
-                      value={invoice.paymentUpiId}
-                      onChange={(e) =>
-                        setInvoice((p: any) => ({
-                          ...p,
-                          paymentUpiId: e.target.value,
-                          includeQrCode: !!e.target.value,
-                        }))
-                      }
-                    />
-                  </div>
                 </div>
 
                 <div className="h-px bg-gray-100" />
