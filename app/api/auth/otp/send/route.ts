@@ -20,6 +20,10 @@ export async function POST(req: NextRequest) {
 
     const { email, type } = validation.data;
 
+    const host = req.headers.get("host");
+    const protocol = host?.includes("localhost") ? "http" : "https";
+    const baseUrl = `${protocol}://${host}`;
+
     if (type === "RESET_PASSWORD") {
       const user = await prisma.user.findUnique({ where: { email } });
       if (!user) {
@@ -37,7 +41,8 @@ export async function POST(req: NextRequest) {
     });
 
     const subject = type === "RESET_PASSWORD" ? "Reset Your Password" : "Your Verification Code";
-    const htmlContent = otpTemplate(otpCode); 
+  
+    const htmlContent = otpTemplate(otpCode, type, baseUrl); 
     
     const emailSent = await sendEmail(email, subject, htmlContent);
 
