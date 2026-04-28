@@ -55,7 +55,11 @@ const InlineTextarea = ({ className, emptyHidePrint, ...props }: any) => (
   />
 );
 
-export default function InvoiceLayout({ initialData, mode = "create", invoiceId }: InvoiceLayoutProps) {
+export default function InvoiceLayout({
+  initialData,
+  mode = "create",
+  invoiceId,
+}: InvoiceLayoutProps) {
   const router = useRouter();
   const invoiceRef = useRef<HTMLDivElement>(null);
 
@@ -73,7 +77,9 @@ export default function InvoiceLayout({ initialData, mode = "create", invoiceId 
 
   const [clients, setClients] = useState<any[]>([]);
   const [zipError, setZipError] = useState("");
-  const [logoPreview, setLogoPreview] = useState<string | null>(initialData?.senderLogoUrl || null);
+  const [logoPreview, setLogoPreview] = useState<string | null>(
+    initialData?.senderLogoUrl || null
+  );
   const [logoFile, setLogoFile] = useState<File | null>(null);
 
   const [invoice, setInvoice] = useState(() => {
@@ -87,7 +93,9 @@ export default function InvoiceLayout({ initialData, mode = "create", invoiceId 
         tableTaxLabel: initialData.tableTaxLabel || "Tax %",
         tableHsnLabel: initialData.tableHsnLabel || "HSN",
         tableAmountLabel: initialData.tableAmountLabel || "Amount",
-        items: initialData.items?.length ? initialData.items : [{ description: "", quantity: 1, rate: 0, taxRate: 0 }],
+        items: initialData.items?.length
+          ? initialData.items
+          : [{ description: "", quantity: 1, rate: 0, taxRate: 0 }],
       };
     }
 
@@ -134,7 +142,7 @@ export default function InvoiceLayout({ initialData, mode = "create", invoiceId 
         const [profileRes, paymentRes, clientsRes] = await Promise.all([
           fetch("/api/user/profile"),
           fetch("/api/user/payment"),
-          fetch("/api/user/clients")
+          fetch("/api/user/clients"),
         ]);
         console.log("testee");
 
@@ -231,8 +239,7 @@ export default function InvoiceLayout({ initialData, mode = "create", invoiceId 
       const printWidth = pdfPageWidth - margin * 2;
 
       const imgProps = pdf.getImageProperties(dataUrl);
-      const printHeight =
-        (imgProps.height * printWidth) / imgProps.width;
+      const printHeight = (imgProps.height * printWidth) / imgProps.width;
 
       pdf.addImage(
         dataUrl,
@@ -252,9 +259,11 @@ export default function InvoiceLayout({ initialData, mode = "create", invoiceId 
     }
   };
 
-  const handleChange = (e: React.ChangeEvent<
-    HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
-  >) => {
+  const handleChange = (
+    e: React.ChangeEvent<
+      HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
+    >
+  ) => {
     const { name, value } = e.target;
     if (name.startsWith("client")) {
       // If user types manually, unlink the saved clientId
@@ -274,11 +283,11 @@ export default function InvoiceLayout({ initialData, mode = "create", invoiceId 
         clientName: "",
         clientAddress: "",
         clientCityZip: "",
-        clientCountry: "India"
+        clientCountry: "India",
       }));
       return;
     }
-    const client = clients.find(c => c.id === selectedId);
+    const client = clients.find((c) => c.id === selectedId);
     if (client) {
       setInvoice((prev: any) => ({
         ...prev,
@@ -286,13 +295,19 @@ export default function InvoiceLayout({ initialData, mode = "create", invoiceId 
         clientCompany: client.companyName || "",
         clientName: client.contactName || client.name || "",
         clientAddress: client.address || "",
-        clientCityZip: `${client.city || ""} ${client.state || ""} ${client.zip || ""}`.trim(),
+        clientCityZip: `${client.city || ""} ${client.state || ""} ${
+          client.zip || ""
+        }`.trim(),
         clientCountry: client.country || "India",
       }));
     }
   };
 
-  const handleItemChange = (index: number, field: string, value: string | number) => {
+  const handleItemChange = (
+    index: number,
+    field: string,
+    value: string | number
+  ) => {
     const newItems = [...invoice.items];
     newItems[index] = { ...newItems[index], [field]: value };
     setInvoice((prev: any) => ({ ...prev, items: newItems }));
@@ -301,7 +316,10 @@ export default function InvoiceLayout({ initialData, mode = "create", invoiceId 
   const addItem = () => {
     setInvoice((prev: any) => ({
       ...prev,
-      items: [...prev.items, { description: "", quantity: 1, rate: 0, taxRate: 0 }],
+      items: [
+        ...prev.items,
+        { description: "", quantity: 1, rate: 0, taxRate: 0 },
+      ],
     }));
   };
 
@@ -347,7 +365,10 @@ export default function InvoiceLayout({ initialData, mode = "create", invoiceId 
       formData.append("data", JSON.stringify(dataToSave));
       if (logoFile) formData.append("logo", logoFile);
 
-      const url = mode === "create" ? "/api/user/invoices" : `/api/user/invoices/${invoiceId}`;
+      const url =
+        mode === "create"
+          ? "/api/user/invoices"
+          : `/api/user/invoices/${invoiceId}`;
       const method = mode === "create" ? "POST" : "PUT";
 
       const res = await fetch(url, { method, body: formData });
@@ -360,7 +381,9 @@ export default function InvoiceLayout({ initialData, mode = "create", invoiceId 
       return true;
     } catch (error) {
       console.error(error);
-      alert("Failed to save invoice. Check the console for exact backend errors.");
+      alert(
+        "Failed to save invoice. Check the console for exact backend errors."
+      );
       return false;
     }
   };
@@ -369,9 +392,12 @@ export default function InvoiceLayout({ initialData, mode = "create", invoiceId 
     if (!invoiceRef.current) return;
 
     const defaultEmail = invoice.clientName
-      ? invoice.clientName.toLowerCase().replace(/\s/g, '') + "@gmail.com"
+      ? invoice.clientName.toLowerCase().replace(/\s/g, "") + "@gmail.com"
       : "";
-    const actualEmail = prompt(`Confirm recipient's email address:`, defaultEmail);
+    const actualEmail = prompt(
+      `Confirm recipient's email address:`,
+      defaultEmail
+    );
     if (!actualEmail) return;
 
     try {
@@ -384,16 +410,20 @@ export default function InvoiceLayout({ initialData, mode = "create", invoiceId 
       const originalBorder = element.style.border;
       const originalRadius = element.style.borderRadius;
 
-      element.style.boxShadow = 'none';
-      element.style.border = 'none';
-      element.style.borderRadius = '0';
+      element.style.boxShadow = "none";
+      element.style.border = "none";
+      element.style.borderRadius = "0";
 
       const dataUrl = await domToJpeg(element, {
         scale: 2,
-        backgroundColor: '#ffffff',
+        backgroundColor: "#ffffff",
         width: element.scrollWidth,
         height: element.scrollHeight,
-        filter: (node) => !(node instanceof HTMLElement && node.classList.contains('print:hidden'))
+        filter: (node) =>
+          !(
+            node instanceof HTMLElement &&
+            node.classList.contains("print:hidden")
+          ),
       });
 
       element.style.boxShadow = originalShadow;
@@ -404,31 +434,47 @@ export default function InvoiceLayout({ initialData, mode = "create", invoiceId 
 
       const margin = 10;
       const pdfPageWidth = pdf.internal.pageSize.getWidth();
-      const printWidth = pdfPageWidth - (margin * 2);
+      const printWidth = pdfPageWidth - margin * 2;
 
       const imgProps = pdf.getImageProperties(dataUrl);
       const printHeight = (imgProps.height * printWidth) / imgProps.width;
 
-      pdf.addImage(dataUrl, "JPEG", margin, margin, printWidth, printHeight, undefined, 'FAST');
+      pdf.addImage(
+        dataUrl,
+        "JPEG",
+        margin,
+        margin,
+        printWidth,
+        printHeight,
+        undefined,
+        "FAST"
+      );
       const pdfBlob = pdf.output("blob");
 
       const formData = new FormData();
       formData.append("pdf", pdfBlob, `${invoice.invoiceNumber}.pdf`);
       formData.append("toEmail", actualEmail);
-      formData.append("clientName", invoice.clientName || invoice.clientCompany || "Client");
+      formData.append(
+        "clientName",
+        invoice.clientName || invoice.clientCompany || "Client"
+      );
       formData.append("invoiceNumber", invoice.invoiceNumber);
 
-      const senderName = invoice.senderCompany || invoice.senderName || "Invoice Generator";
+      const senderName =
+        invoice.senderCompany || invoice.senderName || "Invoice Generator";
       formData.append("senderName", senderName);
 
-      if (invoiceId || invoice.id) formData.append("invoiceId", invoiceId || invoice.id);
+      if (invoiceId || invoice.id)
+        formData.append("invoiceId", invoiceId || invoice.id);
 
-      const res = await fetch("/api/user/invoices/send", { method: "POST", body: formData });
+      const res = await fetch("/api/user/invoices/send", {
+        method: "POST",
+        body: formData,
+      });
       const result = await res.json();
 
       if (result.success) alert("Email sent successfully!");
       else alert("Failed to send email: " + result.message);
-
     } catch (error) {
       console.error("PDF generation error:", error);
       alert("Error processing PDF for email.");
@@ -454,7 +500,9 @@ export default function InvoiceLayout({ initialData, mode = "create", invoiceId 
     if (!confirm("Are you sure you want to delete this invoice?")) return;
     setIsDeleting(true);
     try {
-      const res = await fetch(`/api/user/invoices/${invoiceId}`, { method: "DELETE" });
+      const res = await fetch(`/api/user/invoices/${invoiceId}`, {
+        method: "DELETE",
+      });
       if (res.ok) {
         router.push("/user/invoices");
       } else {
@@ -470,38 +518,65 @@ export default function InvoiceLayout({ initialData, mode = "create", invoiceId 
 
   useEffect(() => {
     console.log("log", isLoggedIn);
-
   }, [isLoggedIn]);
 
   const isAnyActionProcessing = isSaving || isEmailing || isDeleting;
 
   return (
-    <div className="w-full py-10 px-6 bg-slate-50 min-h-screen">
+    <div className="w-full py-10 px-6 bg-slate-50 min-h-screen overflow-y-auto">
       <div className="mx-auto max-w-6xl justify-center flex flex-wrap lg:flex-nowrap gap-6">
-
         {/* LEFT - Invoice Section */}
         <div className="flex-2 w-full lg:max-w-3xl">
           <Card className="p-10 shadow-lg border bg-white rounded-xl">
             <CardContent className="space-y-8 p-0" ref={invoiceRef}>
-
               {/* Header */}
               <div className="flex justify-between items-start">
                 <div className="space-y-1 text-sm text-gray-800 w-1/2">
                   <label className="cursor-pointer mb-4 w-32 h-20 border border-dashed border-gray-300 rounded flex items-center justify-center overflow-hidden hover:bg-gray-50 transition-colors">
                     {logoPreview ? (
-                      <img src={logoPreview} alt="Logo" className="w-full h-full object-contain" />
+                      <img
+                        src={logoPreview}
+                        alt="Logo"
+                        className="w-full h-full object-contain"
+                      />
                     ) : (
                       <span className="text-xs text-gray-400">Upload Logo</span>
                     )}
-                    <input type="file" accept="image/*" className="hidden" onChange={handleLogoUpload} />
+                    <input
+                      type="file"
+                      accept="image/*"
+                      className="hidden"
+                      onChange={handleLogoUpload}
+                    />
                   </label>
 
                   <div className="font-medium">
-                    <InlineInput name="senderCompany" placeholder="Your Company" value={invoice.senderCompany} onChange={handleChange} className="font-semibold text-base" />
+                    <InlineInput
+                      name="senderCompany"
+                      placeholder="Your Company"
+                      value={invoice.senderCompany}
+                      onChange={handleChange}
+                      className="font-semibold text-base"
+                    />
                   </div>
-                  <InlineInput name="senderName" placeholder="Your Name" value={invoice.senderName} onChange={handleChange} />
-                  <InlineInput name="senderAddress" placeholder="Company's Address" value={invoice.senderAddress} onChange={handleChange} />
-                  <InlineInput name="senderGSTIN" placeholder="Company's GSTIN" value={invoice.senderGSTIN} onChange={handleChange} />
+                  <InlineInput
+                    name="senderName"
+                    placeholder="Your Name"
+                    value={invoice.senderName}
+                    onChange={handleChange}
+                  />
+                  <InlineInput
+                    name="senderAddress"
+                    placeholder="Company's Address"
+                    value={invoice.senderAddress}
+                    onChange={handleChange}
+                  />
+                  <InlineInput
+                    name="senderGSTIN"
+                    placeholder="Company's GSTIN"
+                    value={invoice.senderGSTIN}
+                    onChange={handleChange}
+                  />
                   {/* Country Dropdown */}
                   <select
                     name="clientCountry"
@@ -528,11 +603,13 @@ export default function InvoiceLayout({ initialData, mode = "create", invoiceId 
                   >
                     <option value="">Select State</option>
 
-                    {State.getStatesOfCountry(invoice.clientCountry).map((state) => (
-                      <option key={state.isoCode} value={state.isoCode}>
-                        {state.name}
-                      </option>
-                    ))}
+                    {State.getStatesOfCountry(invoice.clientCountry).map(
+                      (state) => (
+                        <option key={state.isoCode} value={state.isoCode}>
+                          {state.name}
+                        </option>
+                      )
+                    )}
                   </select>
 
                   {/* City Dropdown */}
@@ -590,9 +667,7 @@ export default function InvoiceLayout({ initialData, mode = "create", invoiceId 
                       )}
                     />
                     {zipError && (
-                      <p className="text-xs text-red-500 mt-1">
-                        {zipError}
-                      </p>
+                      <p className="text-xs text-red-500 mt-1">{zipError}</p>
                     )}
                   </div>
                 </div>
@@ -681,11 +756,13 @@ export default function InvoiceLayout({ initialData, mode = "create", invoiceId 
                   >
                     <option value="">Select State</option>
 
-                    {State.getStatesOfCountry(invoice.clientCountry).map((state) => (
-                      <option key={state.isoCode} value={state.isoCode}>
-                        {state.name}
-                      </option>
-                    ))}
+                    {State.getStatesOfCountry(invoice.clientCountry).map(
+                      (state) => (
+                        <option key={state.isoCode} value={state.isoCode}>
+                          {state.name}
+                        </option>
+                      )
+                    )}
                   </select>
 
                   {/* City Dropdown */}
@@ -743,26 +820,40 @@ export default function InvoiceLayout({ initialData, mode = "create", invoiceId 
                       )}
                     />
                     {zipError && (
-                      <p className="text-xs text-red-500 mt-1">
-                        {zipError}
-                      </p>
+                      <p className="text-xs text-red-500 mt-1">{zipError}</p>
                     )}
                   </div>
                 </div>
 
-
                 <div className="text-right space-y-2 w-[200px]">
                   <div className="flex justify-between items-center">
                     <span className="font-medium text-gray-600">Invoice#</span>
-                    <InlineInput name="invoiceNumber" value={invoice.invoiceNumber} onChange={handleChange} className="text-right w-24 font-medium" />
+                    <InlineInput
+                      name="invoiceNumber"
+                      value={invoice.invoiceNumber}
+                      onChange={handleChange}
+                      className="text-right w-24 font-medium"
+                    />
                   </div>
                   <div className="flex justify-between items-center">
                     <span className="font-medium text-gray-600">Date</span>
-                    <InlineInput type="date" name="issueDate" value={invoice.issueDate} onChange={handleChange} className="text-right w-32" />
+                    <InlineInput
+                      type="date"
+                      name="issueDate"
+                      value={invoice.issueDate}
+                      onChange={handleChange}
+                      className="text-right w-32"
+                    />
                   </div>
                   <div className="flex justify-between items-center">
                     <span className="font-medium text-gray-600">Due Date</span>
-                    <InlineInput type="date" name="dueDate" value={invoice.dueDate} onChange={handleChange} className="text-right w-32" />
+                    <InlineInput
+                      type="date"
+                      name="dueDate"
+                      value={invoice.dueDate}
+                      onChange={handleChange}
+                      className="text-right w-32"
+                    />
                   </div>
                 </div>
               </div>
@@ -936,7 +1027,11 @@ export default function InvoiceLayout({ initialData, mode = "create", invoiceId 
                         type="number"
                         value={item.quantity || ""}
                         onChange={(e: any) =>
-                          handleItemChange(i, "quantity", Number(e.target.value))
+                          handleItemChange(
+                            i,
+                            "quantity",
+                            Number(e.target.value)
+                          )
                         }
                         className="text-center"
                       />
@@ -1012,7 +1107,6 @@ export default function InvoiceLayout({ initialData, mode = "create", invoiceId 
 
               {/* Totals & Extra Info Container */}
               <div className="flex justify-between items-end mt-8">
-
                 {/* Notes & Terms */}
                 <div className="w-[50%] space-y-6">
                   {/* <div>
@@ -1130,9 +1224,13 @@ export default function InvoiceLayout({ initialData, mode = "create", invoiceId 
                           <div className="flex-col items-center justify-between">
                             <div className="bg-white rounded-lg mb-3">
                               <QRCodeSVG
-                                value={`upi://pay?pa=${invoice.paymentUpiId}&pn=${encodeURIComponent(
+                                value={`upi://pay?pa=${
+                                  invoice.paymentUpiId
+                                }&pn=${encodeURIComponent(
                                   invoice.senderCompany || invoice.senderName
-                                )}&am=${totals.total.toFixed(2)}&cu=${selectedCurrency.code}`}
+                                )}&am=${totals.total.toFixed(2)}&cu=${
+                                  selectedCurrency.code
+                                }`}
                                 size={162}
                                 level="H"
                               />
@@ -1143,10 +1241,14 @@ export default function InvoiceLayout({ initialData, mode = "create", invoiceId 
                             <button
                               type="button"
                               onClick={() => {
-                                const upiLink = `upi://pay?pa=${invoice.paymentUpiId}&am=${totals.total.toFixed(
+                                const upiLink = `upi://pay?pa=${
+                                  invoice.paymentUpiId
+                                }&am=${totals.total.toFixed(
                                   2
                                 )}&cu=INR&tn=${encodeURIComponent(
-                                  `Payment of ${invoice.senderCompany || invoice.senderName}`
+                                  `Payment of ${
+                                    invoice.senderCompany || invoice.senderName
+                                  }`
                                 )}`;
 
                                 window.location.href = upiLink;
@@ -1182,9 +1284,7 @@ export default function InvoiceLayout({ initialData, mode = "create", invoiceId 
                       {/* Totals */}
                       <div className="space-y-3 text-sm">
                         <div className="flex justify-between items-center  w-[290px]">
-                          <span className="text-gray-600">
-                            Sub Total
-                          </span>
+                          <span className="text-gray-600">Sub Total</span>
                           <span className="font-medium text-gray-800">
                             {selectedCurrency.symbol}
                             {totals.subTotal.toFixed(2)}
@@ -1192,9 +1292,7 @@ export default function InvoiceLayout({ initialData, mode = "create", invoiceId 
                         </div>
 
                         <div className="flex justify-between items-center">
-                          <span className="text-gray-600">
-                            Tax Total
-                          </span>
+                          <span className="text-gray-600">Tax Total</span>
                           <span className="font-medium text-gray-800">
                             {selectedCurrency.symbol}
                             {totals.taxTotal.toFixed(2)}
@@ -1238,17 +1336,15 @@ export default function InvoiceLayout({ initialData, mode = "create", invoiceId 
                   </div>
                 </div>
               </div>
-
             </CardContent>
           </Card>
         </div>
 
         {/* RIGHT - Sticky Panel */}
-        <div className="relative w-full lg:w-80">
+        <div className="relative w-full self-start lg:w-80">
           <div className="sticky top-10">
             <Card className="p-6 border shadow-sm bg-white rounded-xl">
               <CardContent className="p-0 space-y-6">
-
                 {/* Header */}
                 <div>
                   <h3 className="text-lg font-semibold text-gray-900">
@@ -1260,15 +1356,19 @@ export default function InvoiceLayout({ initialData, mode = "create", invoiceId 
                 {/* Load Client Dropdown (Only for Logged-In Users) */}
                 {isLoggedIn && clients.length > 0 && (
                   <div className="space-y-3">
-                    <p className="text-sm font-medium text-gray-700">Load Client</p>
+                    <p className="text-sm font-medium text-gray-700">
+                      Load Client
+                    </p>
                     <select
                       value={invoice.clientId || ""}
                       onChange={handleClientSelect}
                       className="w-full text-sm border-gray-200 rounded-md p-2 focus:ring-blue-500 focus:border-blue-500 bg-gray-50 border outline-none cursor-pointer"
                     >
                       <option value="">-- Select saved client --</option>
-                      {clients.map(c => (
-                        <option key={c.id} value={c.id}>{c.companyName}</option>
+                      {clients.map((c) => (
+                        <option key={c.id} value={c.id}>
+                          {c.companyName}
+                        </option>
                       ))}
                     </select>
                     <div className="h-px bg-gray-100 pt-2" />
@@ -1277,11 +1377,22 @@ export default function InvoiceLayout({ initialData, mode = "create", invoiceId 
 
                 {/* Theme */}
                 <div className="space-y-3">
-                  <p className="text-sm font-medium text-gray-700">Theme Color</p>
+                  <p className="text-sm font-medium text-gray-700">
+                    Theme Color
+                  </p>
                   <div className="flex items-center gap-3">
                     {themes.map((t) => (
-                      <div key={t.name} onClick={() => setCurrentColor(t)} className="relative">
-                        <div className={cn("w-6 h-6 rounded-full cursor-pointer shadow-sm hover:scale-110 transition-transform", t.color)} />
+                      <div
+                        key={t.name}
+                        onClick={() => setCurrentColor(t)}
+                        className="relative"
+                      >
+                        <div
+                          className={cn(
+                            "w-6 h-6 rounded-full cursor-pointer shadow-sm hover:scale-110 transition-transform",
+                            t.color
+                          )}
+                        />
                         {t.name === currentColor.name && (
                           <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
                             <Check className="w-3.5 h-3.5 text-white drop-shadow-md" />
@@ -1381,7 +1492,9 @@ export default function InvoiceLayout({ initialData, mode = "create", invoiceId 
 
                 {/* UPI / QR Code Section */}
                 <div className="space-y-3 pt-2">
-                  <p className="text-sm font-medium text-gray-700">Payment Options</p>
+                  <p className="text-sm font-medium text-gray-700">
+                    Payment Options
+                  </p>
                   {/* {isLoggedIn && hasSavedUpi ? (
                     <label className="flex items-center gap-2 text-sm text-gray-600 cursor-pointer p-3 bg-gray-50 rounded-lg border border-gray-100 hover:bg-gray-100 transition-colors">
                       <input
@@ -1411,9 +1524,7 @@ export default function InvoiceLayout({ initialData, mode = "create", invoiceId 
 
                   {isLoggedIn ? (
                     hasSavedUpi ? (
-                      <label
-                        className="flex items-center gap-2 text-sm text-gray-600 cursor-pointer p-3 bg-gray-50 rounded-lg border border-gray-100 hover:bg-gray-100 transition-colors"
-                      >
+                      <label className="flex items-center gap-2 rounded-lg border border-gray-100 bg-gray-50 p-3 text-sm text-gray-600 transition-colors hover:bg-gray-100">
                         <input
                           type="checkbox"
                           checked={invoice.includeQrCode}
@@ -1428,64 +1539,150 @@ export default function InvoiceLayout({ initialData, mode = "create", invoiceId 
                         Include UPI QR Code
                       </label>
                     ) : (
-                      <div className="space-y-2 bg-gray-50 p-3 rounded-lg border border-gray-100">
-                        <label className="text-xs font-medium text-gray-600 block">
-                          UPI ID for Payment QR
-                        </label>
+                      <div className="space-y-3 rounded-lg border border-gray-100 bg-gray-50 p-3">
+                        {/* Payment Mode Dropdown */}
+                        <div className="space-y-2">
+                          <label className="block text-xs font-medium text-gray-600">
+                            Select Payment Method
+                          </label>
 
-                        <input
-                          type="text"
-                          placeholder="e.g. yourname@upi"
-                          className="w-full text-sm border-gray-200 rounded-md p-2 focus:ring-blue-500 focus:border-blue-500 bg-white"
-                          value={invoice.paymentUpiId}
-                          onChange={(e) =>
-                            setInvoice((p: any) => ({
-                              ...p,
-                              paymentUpiId: e.target.value,
-                              includeQrCode: !!e.target.value,
-                            }))
-                          }
-                        />
+                          <select
+                            value={invoice.paymentMethod || "upi"}
+                            onChange={(e) =>
+                              setInvoice((p: any) => ({
+                                ...p,
+                                paymentMethod: e.target.value,
+                                paymentUpiId: "",
+                                bankName: "",
+                                accountNumber: "",
+                                ifscCode: "",
+                              }))
+                            }
+                            className="w-full rounded-md border border-gray-200 bg-white p-2 text-sm focus:border-blue-500 focus:ring-blue-500"
+                          >
+                            <option value="upi">UPI</option>
+                            <option value="bank">Bank Transfer</option>
+                          </select>
+                        </div>
+
+                        {/* UPI Fields */}
+                        {(invoice.paymentMethod || "upi") === "upi" && (
+                          <div className="space-y-2">
+                            <label className="block text-xs font-medium text-gray-600">
+                              UPI ID for Payment QR
+                            </label>
+
+                            <input
+                              type="text"
+                              placeholder="e.g. yourname@upi"
+                              className="w-full rounded-md border-gray-200 bg-white p-2 text-sm focus:border-blue-500 focus:ring-blue-500"
+                              value={invoice.paymentUpiId}
+                              onChange={(e) =>
+                                setInvoice((p: any) => ({
+                                  ...p,
+                                  paymentUpiId: e.target.value,
+                                  includeQrCode: !!e.target.value,
+                                }))
+                              }
+                            />
+                          </div>
+                        )}
+
+                        {/* Bank Fields */}
+                        {invoice.paymentMethod === "bank" && (
+                          <div className="space-y-3">
+                            <div>
+                              <label className="mb-1 block text-xs font-medium text-gray-600">
+                                Bank Name
+                              </label>
+                              <input
+                                type="text"
+                                placeholder="HDFC Bank"
+                                value={invoice.bankName || ""}
+                                onChange={(e) =>
+                                  setInvoice((p: any) => ({
+                                    ...p,
+                                    bankName: e.target.value,
+                                  }))
+                                }
+                                className="w-full rounded-md border border-gray-200 bg-white p-2 text-sm"
+                              />
+                            </div>
+
+                            <div>
+                              <label className="mb-1 block text-xs font-medium text-gray-600">
+                                Account Number
+                              </label>
+                              <input
+                                type="text"
+                                placeholder="XXXXXXXXXX"
+                                value={invoice.accountNumber || ""}
+                                onChange={(e) =>
+                                  setInvoice((p: any) => ({
+                                    ...p,
+                                    accountNumber: e.target.value,
+                                  }))
+                                }
+                                className="w-full rounded-md border border-gray-200 bg-white p-2 text-sm"
+                              />
+                            </div>
+
+                            <div>
+                              <label className="mb-1 block text-xs font-medium text-gray-600">
+                                IFSC Code
+                              </label>
+                              <input
+                                type="text"
+                                placeholder="HDFC0001234"
+                                value={invoice.ifscCode || ""}
+                                onChange={(e) =>
+                                  setInvoice((p: any) => ({
+                                    ...p,
+                                    ifscCode: e.target.value,
+                                  }))
+                                }
+                                className="w-full rounded-md border border-gray-200 bg-white p-2 text-sm"
+                              />
+                            </div>
+                          </div>
+                        )}
                       </div>
                     )
                   ) : (
                     <div className="space-y-3">
-                      {/* Disabled Checkbox */}
                       <label
-                        className="flex items-center gap-2 text-sm text-gray-400 cursor-not-allowed p-3 bg-gray-50 rounded-lg border border-gray-100 opacity-70"
+                        className="flex cursor-not-allowed items-center gap-2 rounded-lg border border-gray-100 bg-gray-50 p-3 text-sm text-gray-400 opacity-70"
                         title="Please login to enable payment options"
                       >
-                        <Lock className="w-4 h-4" />
-
+                        <Lock className="h-4 w-4" />
                         <input
                           type="checkbox"
                           disabled
-                          className="rounded border-gray-300 cursor-not-allowed"
+                          className="cursor-not-allowed rounded border-gray-300"
                         />
-
-                        Include UPI QR Code
+                        Payment Options Locked
                       </label>
 
-                      {/* Disabled Input */}
                       <div
-                        className="space-y-2 bg-gray-50 p-3 rounded-lg border border-gray-100 opacity-70"
+                        className="space-y-2 rounded-lg border border-gray-100 bg-gray-50 p-3 opacity-70"
                         title="Please login to enable payment options"
                       >
-                        <label className="text-xs font-medium text-gray-400 flex items-center gap-2">
-                          <Lock className="w-4 h-4" />
-                          UPI ID for Payment QR
+                        <label className="flex items-center gap-2 text-xs font-medium text-gray-400">
+                          <Lock className="h-4 w-4" />
+                          UPI / Bank Details
                         </label>
 
                         <input
                           type="text"
                           disabled
                           placeholder="Login required"
-                          className="w-full text-sm border-gray-200 rounded-md p-2 bg-white cursor-not-allowed"
+                          className="w-full cursor-not-allowed rounded-md border-gray-200 bg-white p-2 text-sm"
                         />
                       </div>
 
-                      <p className="text-xs text-center text-gray-500">
-                        Please Login to enable Payment QR and UPI features.
+                      <p className="text-center text-xs text-gray-500">
+                        Please Login to enable Payment QR and Bank Transfer
+                        features.
                       </p>
                     </div>
                   )}
@@ -1495,7 +1692,6 @@ export default function InvoiceLayout({ initialData, mode = "create", invoiceId 
 
                 {/* Action Buttons */}
                 <div className="flex flex-col gap-3">
-
                   {/* {isLoggedIn ? (
                     <>
                       <Button
@@ -1527,8 +1723,12 @@ export default function InvoiceLayout({ initialData, mode = "create", invoiceId 
 
                   <>
                     <div
-                      className={!isLoggedIn ? "cursor-not-allowed relative" : "relative"}
-                      title={!isLoggedIn ? "Please login to use this feature" : ""}
+                      className={
+                        !isLoggedIn ? "cursor-not-allowed relative" : "relative"
+                      }
+                      title={
+                        !isLoggedIn ? "Please login to use this feature" : ""
+                      }
                     >
                       <Button
                         onClick={handleSaveClick}
@@ -1552,14 +1752,18 @@ export default function InvoiceLayout({ initialData, mode = "create", invoiceId 
                         {isSaving
                           ? "Saving..."
                           : mode === "update"
-                            ? "Update Invoice"
-                            : "Save Invoice"}
+                          ? "Update Invoice"
+                          : "Save Invoice"}
                       </Button>
                     </div>
 
                     <div
-                      className={!isLoggedIn ? "cursor-not-allowed relative" : "relative"}
-                      title={!isLoggedIn ? "Please login to use this feature" : ""}
+                      className={
+                        !isLoggedIn ? "cursor-not-allowed relative" : "relative"
+                      }
+                      title={
+                        !isLoggedIn ? "Please login to use this feature" : ""
+                      }
                     >
                       <Button
                         onClick={handleEmailClick}
@@ -1586,7 +1790,8 @@ export default function InvoiceLayout({ initialData, mode = "create", invoiceId 
 
                     {!isLoggedIn && (
                       <p className="text-xs text-center text-gray-500 mt-2">
-                        Please Login to enable Payments option and Send Email feature.
+                        Please Login to enable Payments option and Send Email
+                        feature.
                       </p>
                     )}
                   </>
@@ -1615,7 +1820,6 @@ export default function InvoiceLayout({ initialData, mode = "create", invoiceId 
             </Card>
           </div>
         </div>
-
       </div>
     </div>
   );

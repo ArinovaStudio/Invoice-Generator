@@ -1,9 +1,9 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import InvoiceLayout from "@/components/Invoice";
-import { useParams } from "next/navigation";
+import InvoiceLayout from "@/components/invoice/InvoiceLayout";
 import { Loader2 } from "lucide-react";
+import { useParams } from "next/navigation";
+import { useEffect, useState } from "react";
 
 export default function UpdateInvoicePage() {
   const { id } = useParams();

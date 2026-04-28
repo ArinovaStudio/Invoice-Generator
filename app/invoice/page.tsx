@@ -1,7 +1,7 @@
 import Navbar from "@/components/Navbar";
-import InvoiceLayout from "@/components/Invoice";
+import InvoiceLayout from "@/components/invoice/InvoiceLayout";
 import Footer from "@/components/Footer";
-
+ 
 export default function InvoicePage() {
   return (
     <main className="min-h-screen bg-background overflow-x-hidden flex flex-col">

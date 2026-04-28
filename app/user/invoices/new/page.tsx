@@ -1,4 +1,4 @@
-import InvoiceLayout from "@/components/Invoice";
+import InvoiceLayout from "@/components/invoice/InvoiceLayout";
 import { Loader2 } from "lucide-react";
 import { Suspense } from "react";
 

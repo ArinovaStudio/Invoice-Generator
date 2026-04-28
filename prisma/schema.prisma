@@ -122,7 +122,10 @@ model Invoice {
   subTotal Float
   taxTotal Float
   totalAmount Float
-
+  paymentMethod String?
+  bankName String?
+  accountNumber String?
+  ifscCode String?
   notesTitle String @default("Notes")
   notes String? @db.Text
   termsTitle String @default("Terms & Conditions")
