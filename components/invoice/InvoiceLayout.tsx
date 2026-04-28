@@ -60,13 +60,14 @@ export default function page({
       senderName: "",
       senderAddress: "",
       senderCityZip: "",
-      senderCountry: "",
+      senderCountry: "IN",
       clientId: "",
       clientCompany: "",
       clientName: "",
       clientAddress: "",
       clientCity: "",
       clientState: "",
+      paymentMethod: "upi",
       clientZip: "",
       clientCountry: "IN",
       invoiceNumber: `INV-${Date.now().toString().slice(-6)}`,
@@ -91,7 +92,7 @@ export default function page({
     };
   });
   const [pdfMode, setPdfMode] = useState(false);
-
+  const tapToPayRef = useRef(null);
   useEffect(() => {
     const fetchDefaults = async () => {
       try {
@@ -103,8 +104,6 @@ export default function page({
         console.log("testee");
 
         if (profileRes.ok) {
-          console.log(profileRes, "profileecaw");
-
           setIsLoggedIn(true);
           const profileData = await profileRes.json();
           const user = profileData.profile || {};
@@ -117,7 +116,7 @@ export default function page({
               senderName: user.name || "",
               senderAddress: user.companyAddress || "",
               senderCityZip: `${user.city || ""} ${user.zip || ""}`.trim(),
-              senderCountry: user.country || "India",
+              senderCountry: "IN",
             }));
           }
         }
@@ -161,7 +160,8 @@ export default function page({
     try {
       setPdfMode(true);
 
-      await new Promise((resolve) => setTimeout(resolve, 200));
+      // wait for UI update
+      await new Promise((resolve) => setTimeout(resolve, 300));
 
       const { domToJpeg } = await import("modern-screenshot");
       const { jsPDF } = await import("jspdf");
@@ -169,7 +169,7 @@ export default function page({
       const element = invoiceRef.current;
 
       const dataUrl = await domToJpeg(element, {
-        scale: 2,
+        scale: 3,
         backgroundColor: "#ffffff",
         width: element.scrollWidth,
         height: element.scrollHeight,
@@ -182,23 +182,92 @@ export default function page({
 
       const pdf = new jsPDF("p", "mm", "a4");
 
-      const margin = 10;
       const pageWidth = pdf.internal.pageSize.getWidth();
-      const printWidth = pageWidth - margin * 2;
+      const pageHeight = pdf.internal.pageSize.getHeight();
+
+      const margin = 10;
+      const usableWidth = pageWidth - margin * 2;
+      const usableHeight = pageHeight - margin * 2;
 
       const imgProps = pdf.getImageProperties(dataUrl);
-      const printHeight = (imgProps.height * printWidth) / imgProps.width;
 
-      pdf.addImage(dataUrl, "JPEG", margin, margin, printWidth, printHeight);
+      // image scaled to page width
+      const imgHeight = (imgProps.height * usableWidth) / imgProps.width;
+
+      let heightLeft = imgHeight;
+      let position = margin;
+
+      // first page
+      pdf.addImage(dataUrl, "JPEG", margin, position, usableWidth, imgHeight);
+
+      heightLeft -= usableHeight;
+
+      const minRemainingHeight = 20;
+
+      while (heightLeft > minRemainingHeight) {
+        position = heightLeft - imgHeight + margin;
+
+        pdf.addPage();
+        pdf.addImage(dataUrl, "JPEG", margin, position, usableWidth, imgHeight);
+
+        heightLeft -= usableHeight;
+      }
+
+      /* -----------------------------------------
+       MAKE EXISTING PAY BUTTON CLICKABLE
+       Add id="upi-pay-btn" on your button
+    ----------------------------------------- */
+
+
+      if (tapToPayRef && invoice.paymentMethod === "upi" && invoice.paymentUpiId) {
+        const btn = tapToPayRef.current! as HTMLButtonElement;
+        const btnRect = btn.getBoundingClientRect();
+        const parentRect = element.getBoundingClientRect();
+
+        // relative button position inside invoice
+        const relativeX = btnRect.left - parentRect.left;
+        const relativeY = btnRect.top - parentRect.top;
+
+        // px -> mm scale
+        const scale = usableWidth / element.scrollWidth;
+
+        const pdfX = margin + relativeX * scale;
+        const pdfYGlobal = margin + relativeY * scale;
+        const pdfW = btnRect.width * scale;
+        const pdfH = btnRect.height * scale;
+
+        // detect page number
+        const pageIndex = Math.floor((pdfYGlobal - margin) / usableHeight) + 1;
+
+        // y inside selected page
+        const pdfY = margin + ((pdfYGlobal - margin - 10) % usableHeight);
+
+        const totalPages = pdf.getNumberOfPages();
+
+        if (pageIndex <= totalPages) {
+          pdf.setPage(pageIndex);
+
+          const upiLink = `upi://pay?pa=${encodeURIComponent(
+            invoice.paymentUpiId
+          )}&pn=${encodeURIComponent(
+            invoice.senderCompany || invoice.senderName
+          )}&am=${totals.total.toFixed(2)}&cu=INR&tn=${encodeURIComponent(
+            `Payment of ${invoice.senderCompany || invoice.senderName}`
+          )}`;
+
+          pdf.link(pdfX, pdfY, pdfW, pdfH, {
+            url: upiLink,
+          });
+        }
+      }
 
       pdf.save(`${invoice.invoiceNumber}.pdf`);
     } catch (error) {
-      console.error(error);
+      console.error("PDF generation failed:", error);
     } finally {
       setPdfMode(false);
     }
   };
-
   const handleChange = (
     e: React.ChangeEvent<
       HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
@@ -252,8 +321,6 @@ export default function page({
     newItems[index] = { ...newItems[index], [field]: value };
     setInvoice((prev: any) => ({ ...prev, items: newItems }));
   };
-
-
 
   const handleLogoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -455,6 +522,7 @@ export default function page({
           setInvoice={setInvoice}
           totals={totals}
           pdfMode={pdfMode}
+          tapToPayRef={tapToPayRef}
         />
         <InvoiceSettings
           clients={clients}

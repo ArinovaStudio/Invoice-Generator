@@ -11,7 +11,7 @@ import { InlineInput, InlineTextarea } from "./InlineComponents";
 
 interface Props {
   invoiceRef: RefObject<HTMLDivElement | null>;
-
+  tapToPayRef: RefObject<HTMLButtonElement | null>;
   invoice: any;
   setInvoice: any;
 
@@ -59,6 +59,7 @@ export default function InvoiceForm({
   selectedCurrency,
   totals,
   pdfMode,
+  tapToPayRef
 }: Props) {
   const [senderZipError, setSenderZipError] = useState("");
   const [clientZipError, setClientZipError] = useState("");
@@ -82,7 +83,13 @@ export default function InvoiceForm({
   return (
     <div className="flex-2 w-full lg:max-w-3xl">
       <Card className="rounded-xl border bg-white p-10 shadow-lg">
-        <CardContent className="space-y-8 p-0" ref={invoiceRef}>
+        <CardContent
+          className={cn(
+            "flex flex-col space-y-4 p-0",
+            pdfMode ? "min-h-[1000px] bg-white" : ""
+          )}
+          ref={invoiceRef}
+        >
           {/* Header */}
           <div className="flex items-start justify-between">
             <div className="w-1/2 space-y-1 text-sm text-gray-800">
@@ -151,7 +158,10 @@ export default function InvoiceForm({
                   name="senderCountry"
                   value={invoice.senderCountry || "IN"}
                   onChange={handleChange}
-                  className={cn("w-full bg-transparent hover:bg-slate-50 focus:bg-blue-50 focus:outline-none focus:ring-1 focus:ring-blue-500/50 rounded px-1 text-gray-700",pdfMode ? "appearance-none pr-0" : "pr-6")}
+                  className={cn(
+                    "w-full bg-transparent hover:bg-slate-50 focus:bg-blue-50 focus:outline-none focus:ring-1 focus:ring-blue-500/50 rounded px-1 text-gray-700",
+                    pdfMode ? "appearance-none pr-0" : "pr-6"
+                  )}
                 >
                   <option value="">Select Country</option>
 
@@ -169,7 +179,10 @@ export default function InvoiceForm({
                   value={invoice.senderState}
                   onChange={handleChange}
                   disabled={!invoice.senderCountry}
-                  className={cn("w-full bg-transparent hover:bg-slate-50 focus:bg-blue-50 focus:outline-none focus:ring-1 focus:ring-blue-500/50 rounded px-1 text-gray-700 disabled:opacity-50",pdfMode ? "appearance-none pr-0" : "pr-6")}
+                  className={cn(
+                    "w-full bg-transparent hover:bg-slate-50 focus:bg-blue-50 focus:outline-none focus:ring-1 focus:ring-blue-500/50 rounded px-1 text-gray-700 disabled:opacity-50",
+                    pdfMode ? "appearance-none pr-0" : "pr-6"
+                  )}
                 >
                   <option value="">Select State</option>
 
@@ -189,7 +202,10 @@ export default function InvoiceForm({
                   value={invoice.senderCity}
                   onChange={handleChange}
                   disabled={!invoice.senderState}
-                  className={cn("w-full bg-transparent hover:bg-slate-50 focus:bg-blue-50 focus:outline-none focus:ring-1 focus:ring-blue-500/50 rounded px-1 text-gray-700 disabled:opacity-50",pdfMode ? "appearance-none pr-0" : "pr-6")}
+                  className={cn(
+                    "w-full bg-transparent hover:bg-slate-50 focus:bg-blue-50 focus:outline-none focus:ring-1 focus:ring-blue-500/50 rounded px-1 text-gray-700 disabled:opacity-50",
+                    pdfMode ? "appearance-none pr-0" : "pr-6"
+                  )}
                 >
                   <option value="">Select City</option>
 
@@ -257,13 +273,13 @@ export default function InvoiceForm({
           </div>
 
           {/* Bill To */}
-          <div className="mt-8 flex justify-between text-sm">
+          <div className="mt-4 flex justify-between text-sm">
             <div className="w-1/2 space-y-1 pr-4">
               {/* {(!pdfMode ||
                 invoice.clientCompany ||
                 invoice.clientName ||
                 invoice.clientAddress) && ( */}
-                <p className="mb-1 font-semibold text-gray-800">Bill To:</p>
+              <p className="mb-1 font-semibold text-gray-800">Bill To:</p>
               {/* )} */}
 
               {(!pdfMode || invoice.clientCompany) && (
@@ -456,16 +472,87 @@ export default function InvoiceForm({
           </div>
 
           {/* Table */}
-          <div className="mt-8 overflow-hidden rounded-sm border">
+          <div className="mt-3 overflow-hidden rounded-sm border">
             <div
               className={`grid grid-cols-13 items-center px-4 py-2 text-sm font-medium text-white ${currentColor.color}`}
             >
-              <div className="col-span-5">Description</div>
-              <div className="col-span-1 text-center">Qty</div>
-              <div className="col-span-2 text-right">Rate</div>
-              <div className="col-span-2 text-center">Tax</div>
-              <div className="col-span-1 text-center">HSN</div>
-              <div className="col-span-2 text-right">Amount</div>
+              {/* Description */}
+              <div className="col-span-5 pr-2">
+                <input
+                  name="tableDescLabel"
+                  value={invoice.tableDescLabel}
+                  onChange={handleChange}
+                  placeholder="Item Description"
+                  className="bg-transparent hover:bg-white/20 focus:bg-white/20 focus:outline-none rounded px-1 w-full placeholder-white/70"
+                />
+              </div>
+
+              {/* Qty */}
+              <div className="col-span-1 text-center">
+                <input
+                  name="tableQtyLabel"
+                  value={invoice.tableQtyLabel}
+                  onChange={handleChange}
+                  placeholder="Qty"
+                  className={cn(
+                    "bg-transparent hover:bg-white/20 focus:bg-white/20 focus:outline-none rounded px-1 w-full text-center placeholder-white/70",
+                    pdfMode ? "text-center!" : ""
+                  )}
+                />
+              </div>
+
+              {/* Rate */}
+              <div className="col-span-2 text-right px-1">
+                <input
+                  name="tableRateLabel"
+                  value={invoice.tableRateLabel}
+                  onChange={handleChange}
+                  placeholder="Rate"
+                  className={cn(
+                    "bg-transparent hover:bg-white/20 focus:bg-white/20 focus:outline-none rounded px-1 w-full text-right placeholder-white/70",
+                    pdfMode ? "text-center!" : ""
+                  )}
+                />
+              </div>
+
+              {/* Tax */}
+              <div className="col-span-2 text-center">
+                <input
+                  name="tableTaxLabel"
+                  value={invoice.tableTaxLabel}
+                  onChange={handleChange}
+                  placeholder="Tax %"
+                  className={cn(
+                    "bg-transparent hover:bg-white/20 focus:bg-white/20 focus:outline-none rounded px-1 w-full text-center placeholder-white/70",
+                    pdfMode ? "text-center!" : ""
+                  )}
+                />
+              </div>
+
+              {/* HSN */}
+              <div className="col-span-1 text-center px-1">
+                <input
+                  name="tableHsnLabel"
+                  value={invoice.tableHsnLabel}
+                  onChange={handleChange}
+                  placeholder="HSN"
+                  className={cn(
+                    "bg-transparent hover:bg-white/20 focus:bg-white/20 focus:outline-none rounded px-1 w-full text-center placeholder-white/70",
+                    pdfMode ? "text-center!" : ""
+                  )}
+                />
+              </div>
+
+              {/* Amount */}
+              <div className="col-span-2 text-right pl-2">
+                <input
+                  name="tableAmountLabel"
+                  value={invoice.tableAmountLabel}
+                  onChange={handleChange}
+                  placeholder="Amount"
+                  className="bg-transparent hover:bg-white/20 focus:bg-white/20 focus:outline-none rounded px-1 w-full text-right placeholder-white/70"
+                />
+              </div>
             </div>
 
             {invoice.items.map((item: any, i: number) => {
@@ -480,7 +567,8 @@ export default function InvoiceForm({
                 >
                   <div className="col-span-5 pr-2">
                     <InlineTextarea
-                      rows={1}
+                      rows={2}
+                      className={cn("resize-y!", pdfMode ? "resize-none!" : "")}
                       value={item.description}
                       onChange={(e: any) =>
                         handleItemChange(i, "description", e.target.value)
@@ -496,29 +584,38 @@ export default function InvoiceForm({
                       onChange={(e: any) =>
                         handleItemChange(i, "quantity", Number(e.target.value))
                       }
-                      className="text-center"
+                      className={cn(
+                        "text-center!",
+                        pdfMode ? "appearance-none" : ""
+                      )}
                     />
                   </div>
 
-                  <div className="col-span-2 px-1">
+                  <div className={cn("col-span-2 px-1")}>
                     <InlineInput
                       type="number"
                       value={item.rate}
                       onChange={(e: any) =>
                         handleItemChange(i, "rate", Number(e.target.value))
                       }
-                      className="text-right"
+                      className={cn(
+                        "text-center!",
+                        pdfMode ? "appearance-none" : ""
+                      )}
                     />
                   </div>
 
-                  <div className="col-span-2 px-1">
+                  <div className={cn("col-span-2 px-1")}>
                     <InlineInput
                       type="number"
                       value={item.taxRate}
                       onChange={(e: any) =>
                         handleItemChange(i, "taxRate", Number(e.target.value))
                       }
-                      className="text-center"
+                      className={cn(
+                        "text-center!",
+                        pdfMode ? "appearance-none" : ""
+                      )}
                     />
                   </div>
 
@@ -528,6 +625,7 @@ export default function InvoiceForm({
                       onChange={(e: any) =>
                         handleItemChange(i, "hsn", e.target.value)
                       }
+                      placeholder="HSN"
                       className="text-center"
                     />
                   </div>
@@ -560,6 +658,121 @@ export default function InvoiceForm({
             <Plus className="h-4 w-4" />
             Add Line Item
           </button>
+
+          <div className="flex-1 flex">
+            <div className="flex flex-col gap-3 w-full">
+              {(!pdfMode || invoice.termsTitle) && (
+                <InlineInput
+                  name="termsTitle"
+                  value={invoice.termsTitle}
+                  onChange={handleChange}
+                  className="font-medium text-gray-800 mb-1"
+                  placeholder="Terms & Conditions"
+                  emptyHidePrint
+                />
+              )}
+              {(!pdfMode || invoice.terms) && (
+                <InlineTextarea
+                  name="terms"
+                  value={invoice.terms}
+                  onChange={handleChange}
+                  className={cn(
+                    "text-sm resize-y! text-gray-600 flex-1 h-full",
+                    pdfMode ? "resize-none!" : "min-h-[60px]"
+                  )}
+                  placeholder="Add terms and conditions..."
+                  emptyHidePrint
+                />
+              )}
+            </div>
+            {/* QR */}
+            {(!pdfMode || (invoice.includeQrCode && invoice.paymentUpiId)) &&
+              invoice.includeQrCode &&
+              invoice.paymentUpiId && (
+                <div className="mt-6 flex justify-end">
+                  <div className=" rounded-2xl p-4 pb-2 bg-white">
+                    {/* Top Row */}
+                    <div className="flex items-center justify-between mb-3">
+                      <p className="text-gray-400 font-normal text-sm uppercase w-full text-center">
+                        Scan to Pay
+                      </p>
+                    </div>
+
+                    {/* QR + Button */}
+                    <div className="float-right flex-col items-center justify-between">
+                      <div className="bg-white rounded-lg mb-3">
+                        <QRCodeSVG
+                          value={`upi://pay?pa=${
+                            invoice.paymentUpiId
+                          }&pn=${encodeURIComponent(
+                            invoice.senderCompany || invoice.senderName
+                          )}&am=${totals.total.toFixed(2)}&cu=${
+                            selectedCurrency.code
+                          }`}
+                          size={162}
+                          level="H"
+                        />
+                      </div>
+                      <p className="text-gray-500 font-mono text-xs truncate text-center mb-3">
+                        {invoice.paymentUpiId}
+                      </p>
+                      <button
+                        ref={tapToPayRef}
+                        type="button"
+                        onClick={() => {
+                          const upiLink = `upi://pay?pa=${encodeURIComponent(
+                            invoice.paymentUpiId
+                          )}&pn=${encodeURIComponent(
+                            invoice.senderCompany || invoice.senderName
+                          )}&am=${totals.total.toFixed(
+                            2
+                          )}&cu=INR&tn=${encodeURIComponent(
+                            `Payment of ${
+                              invoice.senderCompany || invoice.senderName
+                            }`
+                          )}`;
+
+                          const isMobile = /Android|iPhone|iPad|iPod/i.test(
+                            navigator.userAgent
+                          );
+
+                          if (isMobile) {
+                            // open UPI app on mobile
+                            window.location.href = upiLink;
+                          } else {
+                            // fallback for desktop
+                            alert(
+                              "UPI payment links work on mobile devices. Please scan QR or open on your phone."
+                            );
+                          }
+                        }}
+                        className="
+                          bg-orange-500
+                          hover:bg-orange-600
+                          text-white
+                          text-sm
+                          font-medium
+                          px-13
+                          py-2.5
+                          rounded-md
+                          cursor-pointer
+                          border
+                          border-orange-400
+                          transition-all
+                          duration-300
+                          whitespace-nowrap
+                          shadow-[6px_6px_12px_rgba(180,120,40,0.25),-6px_-6px_12px_rgba(255,255,255,0.9)]
+                          active:shadow-[inset_4px_4px_12px_rgba(180,120,40,0.25),inset_-4px_-4px_12px_rgba(255,255,255,0.8)]
+                          active:text-orange-100
+  "
+                      >
+                        Tap to Pay
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
+          </div>
           {invoice.paymentMethod === "bank" && (
             <div className="ml-auto w-[290px] rounded-lg border border-gray-200 bg-gray-50 p-4 text-sm space-y-2">
               <p className="font-semibold text-gray-800">Bank Details</p>
@@ -620,106 +833,8 @@ export default function InvoiceForm({
             </div>
           </div>
 
-          <div className="flex-1 flex">
-            <div className="flex flex-col gap-3 w-full">
-              {(!pdfMode || invoice.termsTitle) && (
-                <InlineInput
-                  name="termsTitle"
-                  value={invoice.termsTitle}
-                  onChange={handleChange}
-                  className="font-medium text-gray-800 mb-1"
-                  placeholder="Terms & Conditions"
-                  emptyHidePrint
-                />
-              )}
-              {(!pdfMode || invoice.terms) && (
-                <InlineTextarea
-                  name="terms"
-                  value={invoice.terms}
-                  onChange={handleChange}
-                  className="text-sm text-gray-600 flex-1 h-full min-h-[60px]"
-                  placeholder="Add terms and conditions..."
-                  emptyHidePrint
-                />
-              )}
-            </div>
-            {/* QR */}
-            {(!pdfMode || (invoice.includeQrCode && invoice.paymentUpiId)) &&
-              invoice.includeQrCode &&
-              invoice.paymentUpiId && (
-                <div className="mt-6 flex justify-end">
-                  <div className=" rounded-2xl p-4 bg-white">
-                    {/* Top Row */}
-                    <div className="flex items-center justify-between mb-3">
-                      <p className="text-gray-400 font-normal text-sm uppercase w-full text-center">
-                        Scan to Pay
-                      </p>
-                    </div>
-
-                    {/* QR + Button */}
-                    <div className="float-right flex-col items-center justify-between">
-                      <div className="bg-white rounded-lg mb-3">
-                        <QRCodeSVG
-                          value={`upi://pay?pa=${
-                            invoice.paymentUpiId
-                          }&pn=${encodeURIComponent(
-                            invoice.senderCompany || invoice.senderName
-                          )}&am=${totals.total.toFixed(2)}&cu=${
-                            selectedCurrency.code
-                          }`}
-                          size={162}
-                          level="H"
-                        />
-                      </div>
-                      <p className="text-gray-500 font-mono text-xs truncate text-center mb-3">
-                        {invoice.paymentUpiId}
-                      </p>
-                      {!pdfMode && (
-                        <button
-                          type="button"
-                          onClick={() => {
-                            const upiLink = `upi://pay?pa=${
-                              invoice.paymentUpiId
-                            }&am=${totals.total.toFixed(
-                              2
-                            )}&cu=INR&tn=${encodeURIComponent(
-                              `Payment of ${
-                                invoice.senderCompany || invoice.senderName
-                              }`
-                            )}`;
-
-                            window.location.href = upiLink;
-                          }}
-                          className="
-                          bg-orange-500
-                          hover:bg-orange-600
-                          text-white
-                          text-sm
-                          font-medium
-                          px-13
-                          py-2.5
-                          rounded-md
-                          cursor-pointer
-                          border
-                          border-orange-400
-                          transition-all
-                          duration-300
-                          whitespace-nowrap
-                          shadow-[6px_6px_12px_rgba(180,120,40,0.25),-6px_-6px_12px_rgba(255,255,255,0.9)]
-                          active:shadow-[inset_4px_4px_12px_rgba(180,120,40,0.25),inset_-4px_-4px_12px_rgba(255,255,255,0.8)]
-                          active:text-orange-100
-  "
-                        >
-                          Tap to Pay
-                        </button>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              )}
-          </div>
-          <div className="mt-10 border-t border-gray-300">
-            <div className="flex items-center justify-center gap-5 mt-6">
+          <div className="mt-1 border-t justify-self-end border-gray-300">
+            <div className="flex items-center justify-center gap-5 mt-2">
               {/* Created By Text */}
               <div className="flex flex-col items-end">
                 <span className="text-xs font-semibold tracking-[0.18em] text-gray-700 uppercase">
