@@ -1,5 +1,6 @@
 "use client";
 
+import { usePathname } from "next/navigation";
 import { useEffect, useRef } from "react";
 
 interface RevealProps {
@@ -11,8 +12,10 @@ interface RevealProps {
 
 const Reveal = ({ children, className = "", delay = 0, y = 40 }: RevealProps) => {
   const ref = useRef<HTMLDivElement>(null);
-
+  const pathName = usePathname();
+  const paths = ["/"];
   useEffect(() => {
+    if(!paths.includes(pathName)) return;
     let cleanup: (() => void) | undefined;
     (async () => {
       const { default: gsap } = await import("gsap");
@@ -42,7 +45,7 @@ const Reveal = ({ children, className = "", delay = 0, y = 40 }: RevealProps) =>
       cleanup = () => ctx.revert();
     })();
     return () => cleanup?.();
-  }, [delay, y]);
+  }, [delay, y,pathName]);
 
   return (
     <div ref={ref} className={className}>

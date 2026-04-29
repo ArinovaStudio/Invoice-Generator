@@ -59,7 +59,7 @@ export default function InvoiceForm({
   selectedCurrency,
   totals,
   pdfMode,
-  tapToPayRef
+  tapToPayRef,
 }: Props) {
   const [senderZipError, setSenderZipError] = useState("");
   const [clientZipError, setClientZipError] = useState("");
@@ -86,7 +86,7 @@ export default function InvoiceForm({
         <CardContent
           className={cn(
             "flex flex-col space-y-4 p-0",
-            pdfMode ? "min-h-[1000px] bg-white" : ""
+            pdfMode ? "min-h-[1000px]! bg-white" : ""
           )}
           ref={invoiceRef}
         >
@@ -99,7 +99,7 @@ export default function InvoiceForm({
                     <img
                       src={logoPreview}
                       alt="Logo"
-                      className="h-full w-full object-contain"
+                      className="h-full w-full object-fit"
                     />
                   ) : (
                     <span className="text-xs text-gray-400">
@@ -153,72 +153,82 @@ export default function InvoiceForm({
                 />
               )}
 
-              {(!pdfMode || invoice.senderCountry) && (
-                <select
-                  name="senderCountry"
-                  value={invoice.senderCountry || "IN"}
-                  onChange={handleChange}
-                  className={cn(
-                    "w-full bg-transparent hover:bg-slate-50 focus:bg-blue-50 focus:outline-none focus:ring-1 focus:ring-blue-500/50 rounded px-1 text-gray-700",
-                    pdfMode ? "appearance-none pr-0" : "pr-6"
-                  )}
-                >
-                  <option value="">Select Country</option>
-
-                  {Country.getAllCountries().map((country) => (
-                    <option key={country.isoCode} value={country.isoCode}>
-                      {country.name}
-                    </option>
-                  ))}
-                </select>
-              )}
+              {(!pdfMode || invoice.senderCountry) &&
+                (pdfMode ? (
+                  <div className="w-full rounded px-1 text-gray-700">India</div>
+                ) : (
+                  <select
+                    name="senderCountry"
+                    value="IN"
+                    onChange={handleChange}
+                    className={cn(
+                      "w-full bg-transparent hover:bg-slate-50 focus:bg-blue-50 focus:outline-none focus:ring-1 focus:ring-blue-500/50 rounded px-1 text-gray-700",
+                      "pr-6"
+                    )}
+                  >
+                    <option value="IN">India</option>
+                  </select>
+                ))}
               {/* State Dropdown */}
-              {(!pdfMode || invoice.senderState) && (
-                <select
-                  name="senderState"
-                  value={invoice.senderState}
-                  onChange={handleChange}
-                  disabled={!invoice.senderCountry}
-                  className={cn(
-                    "w-full bg-transparent hover:bg-slate-50 focus:bg-blue-50 focus:outline-none focus:ring-1 focus:ring-blue-500/50 rounded px-1 text-gray-700 disabled:opacity-50",
-                    pdfMode ? "appearance-none pr-0" : "pr-6"
-                  )}
-                >
-                  <option value="">Select State</option>
+              {(!pdfMode || invoice.senderState) &&
+                (pdfMode ? (
+                  <div className="px-1 text-gray-700">
+                    {
+                      State.getStatesOfCountry(invoice.senderCountry).find(
+                        (s) => s.isoCode === invoice.senderState
+                      )?.name
+                    }
+                  </div>
+                ) : (
+                  <select
+                    name="senderState"
+                    value={invoice.senderState}
+                    onChange={handleChange}
+                    className={cn(
+                      "w-full rounded bg-transparent px-1 text-gray-700 hover:bg-slate-50 focus:bg-blue-50 focus:outline-none focus:ring-1 focus:ring-blue-500/50 disabled:opacity-50",
+                      "pr-6"
+                    )}
+                  >
+                    <option value="">Select State</option>
 
-                  {State.getStatesOfCountry(invoice.senderCountry).map(
-                    (state) => (
-                      <option key={state.isoCode} value={state.isoCode}>
-                        {state.name}
-                      </option>
-                    )
-                  )}
-                </select>
-              )}
+                    {State.getStatesOfCountry(invoice.senderCountry).map(
+                      (state) => (
+                        <option key={state.isoCode} value={state.isoCode}>
+                          {state.name}
+                        </option>
+                      )
+                    )}
+                  </select>
+                ))}
               {/* City Dropdown */}
-              {(!pdfMode || invoice.senderCity) && (
-                <select
-                  name="senderCity"
-                  value={invoice.senderCity}
-                  onChange={handleChange}
-                  disabled={!invoice.senderState}
-                  className={cn(
-                    "w-full bg-transparent hover:bg-slate-50 focus:bg-blue-50 focus:outline-none focus:ring-1 focus:ring-blue-500/50 rounded px-1 text-gray-700 disabled:opacity-50",
-                    pdfMode ? "appearance-none pr-0" : "pr-6"
-                  )}
-                >
-                  <option value="">Select City</option>
+              {(!pdfMode || invoice.senderCity) &&
+                (pdfMode ? (
+                  <div className="w-full rounded px-1 text-gray-700">
+                    {invoice.senderCity}
+                  </div>
+                ) : (
+                  <select
+                    name="senderCity"
+                    value={invoice.senderCity}
+                    onChange={handleChange}
+                    disabled={!invoice.senderState}
+                    className={cn(
+                      "w-full bg-transparent hover:bg-slate-50 focus:bg-blue-50 focus:outline-none focus:ring-1 focus:ring-blue-500/50 rounded px-1 text-gray-700 disabled:opacity-50",
+                      "pr-6"
+                    )}
+                  >
+                    <option value="">Select City</option>
 
-                  {City.getCitiesOfState(
-                    invoice.senderCountry,
-                    invoice.senderState
-                  ).map((city) => (
-                    <option key={city.name} value={city.name}>
-                      {city.name}
-                    </option>
-                  ))}
-                </select>
-              )}
+                    {City.getCitiesOfState(
+                      invoice.senderCountry,
+                      invoice.senderState
+                    ).map((city) => (
+                      <option key={city.name} value={city.name}>
+                        {city.name}
+                      </option>
+                    ))}
+                  </select>
+                ))}
 
               {(!pdfMode || invoice.senderZip) && (
                 <div>
@@ -318,73 +328,82 @@ export default function InvoiceForm({
                   placeholder="Client GSTIN"
                 />
               )}
+              {(!pdfMode || invoice.clientCountry) &&
+                (pdfMode ? (
+                  <div className="w-full rounded px-1 text-gray-700">India</div>
+                ) : (
+                  <select
+                    name="clientCountry"
+                    value="IN"
+                    onChange={handleChange}
+                    className={cn(
+                      "w-full rounded bg-transparent px-1 text-gray-700 hover:bg-slate-50 focus:bg-blue-50 focus:outline-none focus:ring-1 focus:ring-blue-500/50",
+                      "pr-6"
+                    )}
+                  >
+                    <option value="IN">India</option>
+                  </select>
+                ))}
+              {(!pdfMode || invoice.clientState) &&
+                (pdfMode ? (
+                  <div className="w-full rounded px-1 text-gray-700">
+                    {
+                      State.getStatesOfCountry(invoice.clientCountry).find(
+                        (state) => state.isoCode === invoice.clientState
+                      )?.name
+                    }
+                  </div>
+                ) : (
+                  <select
+                    name="clientState"
+                    value={invoice.clientState}
+                    onChange={handleChange}
+                    disabled={!invoice.clientCountry}
+                    className={cn(
+                      "w-full rounded bg-transparent px-1 text-gray-700 hover:bg-slate-50 focus:bg-blue-50 focus:outline-none focus:ring-1 focus:ring-blue-500/50 disabled:opacity-50",
+                      "pr-6"
+                    )}
+                  >
+                    <option value="">Select State</option>
 
-              {(!pdfMode || invoice.clientCountry) && (
-                <select
-                  name="clientCountry"
-                  value={invoice.clientCountry}
-                  onChange={handleChange}
-                  className={cn(
-                    "w-full rounded bg-transparent px-1 text-gray-700 hover:bg-slate-50 focus:bg-blue-50 focus:outline-none focus:ring-1 focus:ring-blue-500/50",
-                    pdfMode ? "appearance-none pr-0" : "pr-6"
-                  )}
-                >
-                  <option value="">Select Country</option>
+                    {State.getStatesOfCountry(invoice.clientCountry).map(
+                      (state) => (
+                        <option key={state.isoCode} value={state.isoCode}>
+                          {state.name}
+                        </option>
+                      )
+                    )}
+                  </select>
+                ))}
 
-                  {Country.getAllCountries().map((country) => (
-                    <option key={country.isoCode} value={country.isoCode}>
-                      {country.name}
-                    </option>
-                  ))}
-                </select>
-              )}
+              {(!pdfMode || invoice.clientCity) &&
+                (pdfMode ? (
+                  <div className="w-full rounded px-1 text-gray-700">
+                    {invoice.clientCity}
+                  </div>
+                ) : (
+                  <select
+                    name="clientCity"
+                    value={invoice.clientCity}
+                    onChange={handleChange}
+                    disabled={!invoice.clientState}
+                    className={cn(
+                      "w-full rounded bg-transparent px-1 text-gray-700 hover:bg-slate-50 focus:bg-blue-50 focus:outline-none focus:ring-1 focus:ring-blue-500/50 disabled:opacity-50",
+                      "pr-6"
+                    )}
+                  >
+                    <option value="">Select City</option>
 
-              {(!pdfMode || invoice.clientState) && (
-                <select
-                  name="clientState"
-                  value={invoice.clientState}
-                  onChange={handleChange}
-                  disabled={!invoice.clientCountry}
-                  className={cn(
-                    "w-full rounded bg-transparent px-1 text-gray-700 hover:bg-slate-50 focus:bg-blue-50 focus:outline-none focus:ring-1 focus:ring-blue-500/50 disabled:opacity-50",
-                    pdfMode ? "appearance-none pr-0" : "pr-6"
-                  )}
-                >
-                  <option value="">Select State</option>
-
-                  {State.getStatesOfCountry(invoice.clientCountry).map(
-                    (state) => (
-                      <option key={state.isoCode} value={state.isoCode}>
-                        {state.name}
+                    {City.getCitiesOfState(
+                      invoice.clientCountry,
+                      invoice.clientState
+                    ).map((city) => (
+                      <option key={city.name} value={city.name}>
+                        {city.name}
                       </option>
-                    )
-                  )}
-                </select>
-              )}
-
-              {(!pdfMode || invoice.clientCity) && (
-                <select
-                  name="clientCity"
-                  value={invoice.clientCity}
-                  onChange={handleChange}
-                  disabled={!invoice.clientState}
-                  className={cn(
-                    "w-full rounded bg-transparent px-1 text-gray-700 hover:bg-slate-50 focus:bg-blue-50 focus:outline-none focus:ring-1 focus:ring-blue-500/50 disabled:opacity-50",
-                    pdfMode ? "appearance-none pr-0" : "pr-6"
-                  )}
-                >
-                  <option value="">Select City</option>
-
-                  {City.getCitiesOfState(
-                    invoice.clientCountry,
-                    invoice.clientState
-                  ).map((city) => (
-                    <option key={city.name} value={city.name}>
-                      {city.name}
-                    </option>
-                  ))}
-                </select>
-              )}
+                    ))}
+                  </select>
+                ))}
 
               {(!pdfMode || invoice.clientZip) && (
                 <div>
@@ -470,9 +489,46 @@ export default function InvoiceForm({
               )}
             </div>
           </div>
+          {(!pdfMode || invoice.clientState) && (
+            <div className="space-y-1 flex gap-2 items-center max-w-sm">
+              <p className="text-xs whitespace-nowrap font-medium uppercase tracking-wide text-gray-500">
+                Place of Supply
+              </p>
 
+              {pdfMode ? (
+                <div className="w-full rounded px-1 text-gray-700">
+                  {
+                    State.getStatesOfCountry(invoice.clientCountry).find(
+                      (state) => state.isoCode === invoice.clientState
+                    )?.name
+                  }
+                </div>
+              ) : (
+                <select
+                  name="clientState"
+                  value={invoice.clientState}
+                  onChange={handleChange}
+                  disabled={!invoice.clientCountry}
+                  className={cn(
+                    "w-full rounded bg-transparent px-1 text-gray-700 hover:bg-slate-50 focus:bg-blue-50 focus:outline-none focus:ring-1 focus:ring-blue-500/50 disabled:opacity-50",
+                    "pr-6"
+                  )}
+                >
+                  <option value="">Select State</option>
+
+                  {State.getStatesOfCountry(invoice.clientCountry).map(
+                    (state) => (
+                      <option key={state.isoCode} value={state.isoCode}>
+                        {state.name}
+                      </option>
+                    )
+                  )}
+                </select>
+              )}
+            </div>
+          )}
           {/* Table */}
-          <div className="mt-3 overflow-hidden rounded-sm border">
+          <div className="mt-3 overflow-hidden rounded-sm">
             <div
               className={`grid grid-cols-13 items-center px-4 py-2 text-sm font-medium text-white ${currentColor.color}`}
             >
@@ -585,7 +641,7 @@ export default function InvoiceForm({
                         handleItemChange(i, "quantity", Number(e.target.value))
                       }
                       className={cn(
-                        "text-center!",
+                        "text-right!",
                         pdfMode ? "appearance-none" : ""
                       )}
                     />
@@ -599,7 +655,7 @@ export default function InvoiceForm({
                         handleItemChange(i, "rate", Number(e.target.value))
                       }
                       className={cn(
-                        "text-center!",
+                        "text-right!",
                         pdfMode ? "appearance-none" : ""
                       )}
                     />
@@ -613,7 +669,7 @@ export default function InvoiceForm({
                         handleItemChange(i, "taxRate", Number(e.target.value))
                       }
                       className={cn(
-                        "text-center!",
+                        "text-right!",
                         pdfMode ? "appearance-none" : ""
                       )}
                     />
@@ -626,7 +682,7 @@ export default function InvoiceForm({
                         handleItemChange(i, "hsn", e.target.value)
                       }
                       placeholder="HSN"
-                      className="text-center"
+                      className="text-right"
                     />
                   </div>
 
@@ -658,95 +714,135 @@ export default function InvoiceForm({
             <Plus className="h-4 w-4" />
             Add Line Item
           </button>
-
-          <div className="flex-1 flex">
-            <div className="flex flex-col gap-3 w-full">
-              {(!pdfMode || invoice.termsTitle) && (
-                <InlineInput
-                  name="termsTitle"
-                  value={invoice.termsTitle}
-                  onChange={handleChange}
-                  className="font-medium text-gray-800 mb-1"
-                  placeholder="Terms & Conditions"
-                  emptyHidePrint
-                />
-              )}
-              {(!pdfMode || invoice.terms) && (
-                <InlineTextarea
-                  name="terms"
-                  value={invoice.terms}
-                  onChange={handleChange}
-                  className={cn(
-                    "text-sm resize-y! text-gray-600 flex-1 h-full",
-                    pdfMode ? "resize-none!" : "min-h-[60px]"
-                  )}
-                  placeholder="Add terms and conditions..."
-                  emptyHidePrint
-                />
-              )}
+          <div
+            className={cn(
+              "flex items-end justify-between gap-6",
+              pdfMode ? "flex-1" : ""
+            )}
+          >
+            <div className="flex-1 flex min-h-[120px]">
+              <div className="flex flex-col gap-3 w-full">
+                {(!pdfMode || invoice.termsTitle) && (
+                  <InlineInput
+                    name="termsTitle"
+                    value={invoice.termsTitle}
+                    onChange={handleChange}
+                    className="font-medium text-gray-800 mb-1"
+                    placeholder="Terms & Conditions"
+                    emptyHidePrint
+                  />
+                )}
+                {(!pdfMode || invoice.terms) && (
+                  <InlineTextarea
+                    name="terms"
+                    value={invoice.terms}
+                    onChange={handleChange}
+                    className={cn(
+                      "text-sm resize-y! text-gray-600 flex-1 h-full",
+                      pdfMode ? "resize-none!" : "min-h-[60px]"
+                    )}
+                    placeholder="Add terms and conditions..."
+                    emptyHidePrint
+                  />
+                )}
+              </div>
             </div>
-            {/* QR */}
-            {(!pdfMode || (invoice.includeQrCode && invoice.paymentUpiId)) &&
-              invoice.includeQrCode &&
-              invoice.paymentUpiId && (
-                <div className="mt-6 flex justify-end">
-                  <div className=" rounded-2xl p-4 pb-2 bg-white">
-                    {/* Top Row */}
-                    <div className="flex items-center justify-between mb-3">
-                      <p className="text-gray-400 font-normal text-sm uppercase w-full text-center">
-                        Scan to Pay
-                      </p>
+
+            <div className="flex flex-col gap-4">
+              {invoice.paymentMethod === "bank" && (
+                <div className="ml-auto w-[290px] rounded-lg border border-gray-200 bg-gray-50 p-4 text-sm space-y-2">
+                  <p className="font-semibold text-gray-800">Bank Details</p>
+
+                  {invoice.bankName && (
+                    <div className="flex justify-between gap-3">
+                      <span className="text-gray-500">Bank</span>
+                      <span className="font-medium text-right">
+                        {invoice.bankName}
+                      </span>
                     </div>
+                  )}
 
-                    {/* QR + Button */}
-                    <div className="float-right flex-col items-center justify-between">
-                      <div className="bg-white rounded-lg mb-3">
-                        <QRCodeSVG
-                          value={`upi://pay?pa=${
-                            invoice.paymentUpiId
-                          }&pn=${encodeURIComponent(
-                            invoice.senderCompany || invoice.senderName
-                          )}&am=${totals.total.toFixed(2)}&cu=${
-                            selectedCurrency.code
-                          }`}
-                          size={162}
-                          level="H"
-                        />
+                  {invoice.accountNumber && (
+                    <div className="flex justify-between gap-3">
+                      <span className="text-gray-500">A/C No.</span>
+                      <span className="font-medium text-right">
+                        {invoice.accountNumber}
+                      </span>
+                    </div>
+                  )}
+
+                  {invoice.ifscCode && (
+                    <div className="flex justify-between gap-3">
+                      <span className="text-gray-500">IFSC</span>
+                      <span className="font-medium text-right">
+                        {invoice.ifscCode}
+                      </span>
+                    </div>
+                  )}
+                </div>
+              )}
+              {/* QR */}
+              {(!pdfMode || (invoice.includeQrCode && invoice.paymentUpiId)) &&
+                invoice.includeQrCode &&
+                invoice.paymentUpiId && (
+                  <div className="mt-6 flex justify-end">
+                    <div className=" rounded-2xl p-4 pb-2 bg-white">
+                      {/* Top Row */}
+                      <div className="flex items-center justify-between mb-3">
+                        <p className="text-gray-400 font-normal text-sm uppercase w-full text-center">
+                          Scan to Pay
+                        </p>
                       </div>
-                      <p className="text-gray-500 font-mono text-xs truncate text-center mb-3">
-                        {invoice.paymentUpiId}
-                      </p>
-                      <button
-                        ref={tapToPayRef}
-                        type="button"
-                        onClick={() => {
-                          const upiLink = `upi://pay?pa=${encodeURIComponent(
-                            invoice.paymentUpiId
-                          )}&pn=${encodeURIComponent(
-                            invoice.senderCompany || invoice.senderName
-                          )}&am=${totals.total.toFixed(
-                            2
-                          )}&cu=INR&tn=${encodeURIComponent(
-                            `Payment of ${
+
+                      {/* QR + Button */}
+                      <div className="float-right max-w-[150px] flex-col items-center justify-between">
+                        <div className="bg-white rounded-lg mb-3">
+                          <QRCodeSVG
+                            value={`upi://pay?pa=${
+                              invoice.paymentUpiId
+                            }&pn=${encodeURIComponent(
                               invoice.senderCompany || invoice.senderName
-                            }`
-                          )}`;
+                            )}&am=${totals.total.toFixed(2)}&cu=${
+                              selectedCurrency.code
+                            }`}
+                            size={162}
+                            level="H"
+                          />
+                        </div>
+                        <p className="text-gray-500 break-all font-mono text-xs text-center mb-3">
+                          {invoice.paymentUpiId}
+                        </p>
+                        <button
+                          ref={tapToPayRef}
+                          type="button"
+                          onClick={() => {
+                            const upiLink = `upi://pay?pa=${encodeURIComponent(
+                              invoice.paymentUpiId
+                            )}&pn=${encodeURIComponent(
+                              invoice.senderCompany || invoice.senderName
+                            )}&am=${totals.total.toFixed(
+                              2
+                            )}&cu=INR&tn=${encodeURIComponent(
+                              `Payment of ${
+                                invoice.senderCompany || invoice.senderName
+                              }`
+                            )}`;
 
-                          const isMobile = /Android|iPhone|iPad|iPod/i.test(
-                            navigator.userAgent
-                          );
-
-                          if (isMobile) {
-                            // open UPI app on mobile
-                            window.location.href = upiLink;
-                          } else {
-                            // fallback for desktop
-                            alert(
-                              "UPI payment links work on mobile devices. Please scan QR or open on your phone."
+                            const isMobile = /Android|iPhone|iPad|iPod/i.test(
+                              navigator.userAgent
                             );
-                          }
-                        }}
-                        className="
+
+                            if (isMobile) {
+                              // open UPI app on mobile
+                              window.location.href = upiLink;
+                            } else {
+                              // fallback for desktop
+                              alert(
+                                "UPI payment links work on mobile devices. Please scan QR or open on your phone."
+                              );
+                            }
+                          }}
+                          className="
                           bg-orange-500
                           hover:bg-orange-600
                           text-white
@@ -765,71 +861,39 @@ export default function InvoiceForm({
                           active:shadow-[inset_4px_4px_12px_rgba(180,120,40,0.25),inset_-4px_-4px_12px_rgba(255,255,255,0.8)]
                           active:text-orange-100
   "
-                      >
-                        Tap to Pay
-                      </button>
+                        >
+                          Tap to Pay
+                        </button>
+                      </div>
                     </div>
                   </div>
-                </div>
-              )}
-          </div>
-          {invoice.paymentMethod === "bank" && (
-            <div className="ml-auto w-[290px] rounded-lg border border-gray-200 bg-gray-50 p-4 text-sm space-y-2">
-              <p className="font-semibold text-gray-800">Bank Details</p>
-
-              {invoice.bankName && (
-                <div className="flex justify-between gap-3">
-                  <span className="text-gray-500">Bank</span>
-                  <span className="font-medium text-right">
-                    {invoice.bankName}
+                )}
+              {/* Totals */}
+              <div className="ml-auto w-[290px] space-y-3 text-sm">
+                <div className="flex justify-between">
+                  <span>Sub Total</span>
+                  <span>
+                    {selectedCurrency.symbol}
+                    {totals.subTotal.toFixed(2)}
                   </span>
                 </div>
-              )}
 
-              {invoice.accountNumber && (
-                <div className="flex justify-between gap-3">
-                  <span className="text-gray-500">A/C No.</span>
-                  <span className="font-medium text-right">
-                    {invoice.accountNumber}
+                <div className="flex justify-between">
+                  <span>Tax Total</span>
+                  <span>
+                    {selectedCurrency.symbol}
+                    {totals.taxTotal.toFixed(2)}
                   </span>
                 </div>
-              )}
 
-              {invoice.ifscCode && (
-                <div className="flex justify-between gap-3">
-                  <span className="text-gray-500">IFSC</span>
-                  <span className="font-medium text-right">
-                    {invoice.ifscCode}
+                <div className="flex justify-between border-t pt-3 text-base font-bold">
+                  <span>Total</span>
+                  <span>
+                    {selectedCurrency.symbol}
+                    {totals.total.toFixed(2)}
                   </span>
                 </div>
-              )}
-            </div>
-          )}
-
-          {/* Totals */}
-          <div className="ml-auto w-[290px] space-y-3 text-sm">
-            <div className="flex justify-between">
-              <span>Sub Total</span>
-              <span>
-                {selectedCurrency.symbol}
-                {totals.subTotal.toFixed(2)}
-              </span>
-            </div>
-
-            <div className="flex justify-between">
-              <span>Tax Total</span>
-              <span>
-                {selectedCurrency.symbol}
-                {totals.taxTotal.toFixed(2)}
-              </span>
-            </div>
-
-            <div className="flex justify-between border-t pt-3 text-base font-bold">
-              <span>Total</span>
-              <span>
-                {selectedCurrency.symbol}
-                {totals.total.toFixed(2)}
-              </span>
+              </div>
             </div>
           </div>
 

@@ -1,13 +1,15 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-
+import { usePathname } from "next/navigation";
 const CustomCursor = () => {
   const dotRef = useRef<HTMLDivElement>(null);
   const ringRef = useRef<HTMLDivElement>(null);
-
+  const paths = ["/"];
+  const pathName = usePathname();
   useEffect(() => {
     // Disable on touch devices
+    if(!paths.includes(pathName)) return;
     if (typeof window === "undefined") return;
     const isTouch = window.matchMedia("(pointer: coarse)").matches;
     if (isTouch) return;
@@ -57,7 +59,7 @@ const CustomCursor = () => {
       };
     })();
     return () => cleanup?.();
-  }, []);
+  }, [pathName]);
 
   return (
     <>

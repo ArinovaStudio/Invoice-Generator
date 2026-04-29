@@ -85,8 +85,8 @@ export default function page({
 
       notesTitle: "Notes",
       notes: "It was great doing business with you.",
-      termsTitle: "",
-      terms: "",
+      termsTitle: "Terms And Conditions",
+      terms: "Terms Content Will Go Here...",
       paymentUpiId: "",
       includeQrCode: false,
     };
@@ -115,8 +115,7 @@ export default function page({
               senderCompany: user.companyName || "",
               senderName: user.name || "",
               senderAddress: user.companyAddress || "",
-              senderCityZip: `${user.city || ""} ${user.zip || ""}`.trim(),
-              senderCountry: "IN",
+              // senderCityZip: `${user.city || ""} ${user.zip || ""}`.trim(),
             }));
           }
         }
@@ -156,7 +155,6 @@ export default function page({
 
   const handleDownloadPDF = async () => {
     if (!invoiceRef.current) return;
-
     try {
       setPdfMode(true);
 
@@ -219,7 +217,7 @@ export default function page({
     ----------------------------------------- */
 
 
-      if (tapToPayRef && invoice.paymentMethod === "upi" && invoice.paymentUpiId) {
+      if (tapToPayRef.current && invoice.paymentMethod === "upi" && invoice.paymentUpiId) {
         const btn = tapToPayRef.current! as HTMLButtonElement;
         const btnRect = btn.getBoundingClientRect();
         const parentRect = element.getBoundingClientRect();
@@ -240,7 +238,7 @@ export default function page({
         const pageIndex = Math.floor((pdfYGlobal - margin) / usableHeight) + 1;
 
         // y inside selected page
-        const pdfY = margin + ((pdfYGlobal - margin - 10) % usableHeight);
+        const pdfY = margin + ((pdfYGlobal - margin) % usableHeight);
 
         const totalPages = pdf.getNumberOfPages();
 
@@ -507,6 +505,7 @@ export default function page({
     }
   };
   const isAnyActionProcessing = isSaving || isEmailing || isDeleting;
+  
   return (
     <div className="w-full py-10 px-6 bg-slate-50 min-h-screen overflow-y-auto">
       <div className="mx-auto max-w-6xl py-12 justify-center flex flex-wrap lg:flex-nowrap gap-6">

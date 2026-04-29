@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-
+import { usePathname } from "next/navigation";
 const cases = [
   {
     tag: "FREELANCERS",
@@ -40,8 +40,10 @@ const cases = [
 const UseCasesHorizontal = () => {
   const sectionRef = useRef<HTMLElement>(null);
   const trackRef = useRef<HTMLDivElement>(null);
-
+  const pathName = usePathname();
+  const paths = ["/"];
   useEffect(() => {
+    if(!paths.includes(pathName)) return;
     let cleanup: (() => void) | undefined;
     (async () => {
       const { default: gsap } = await import("gsap");
@@ -123,7 +125,7 @@ const UseCasesHorizontal = () => {
       };
     })();
     return () => cleanup?.();
-  }, []);
+  }, [pathName]);
 
   return (
     <section ref={sectionRef} className="relative h-screen min-h-[700px] overflow-hidden bg-background">
