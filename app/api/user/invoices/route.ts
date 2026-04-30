@@ -9,12 +9,15 @@ export async function GET() {
     const { user, error } = await getUser();
 
     if (error || !user) {
-      return NextResponse.json({ success: false, message: error || "Unauthorized" }, { status: 401 });
+      return NextResponse.json(
+        { success: false, message: error || "Unauthorized" },
+        { status: 401 }
+      );
     }
 
     const invoices = await prisma.invoice.findMany({
       where: { userId: user.id },
-      orderBy: { createdAt: 'desc' },
+      orderBy: { createdAt: "desc" },
       select: {
         id: true,
         invoiceNumber: true,
@@ -23,12 +26,15 @@ export async function GET() {
         dueDate: true,
         totalAmount: true,
         status: true,
-      }
+      },
     });
 
     return NextResponse.json({ success: true, invoices }, { status: 200 });
   } catch {
-    return NextResponse.json({ success: false, message: "Internal Server Error" }, { status: 500 });
+    return NextResponse.json(
+      { success: false, message: "Internal Server Error" },
+      { status: 500 }
+    );
   }
 }
 
@@ -37,6 +43,7 @@ const invoiceItemSchema = z.object({
   quantity: z.number().min(1),
   rate: z.number().min(0),
   taxRate: z.number().min(0).default(0),
+  hsn: z.string().min(1,"HSN Code Is Required!")
 });
 
 const invoiceSchema = z.object({
@@ -48,10 +55,12 @@ const invoiceSchema = z.object({
   invoiceNumber: z.string().min(1, "Invoice number is required"),
   issueDate: z.string().transform((str) => new Date(str)),
   dueDate: z.string().transform((str) => new Date(str)),
-  paymentMethod: z.enum(["bank","upi"]).optional(),
+  paymentMethod: z.enum(["bank", "upi"]).optional(),
   bankName: z.string().optional().nullable(),
   accountNumber: z.string().optional().nullable(),
   ifscCode: z.string().optional().nullable(),
+  senderCompany: z.string().optional(),
+  senderGSTIN: z.string().optional(),
   senderName: z.string().optional().nullable(),
   senderAddress: z.string().optional().nullable(),
   senderCity: z.string().optional().nullable(),
@@ -59,6 +68,8 @@ const invoiceSchema = z.object({
   senderZip: z.string().optional().nullable(),
   senderCountry: z.string().optional().nullable(),
 
+  clientCompany: z.string().optional(),
+  clientGSTIN: z.string().optional(),
   clientName: z.string().optional(),
   clientAddress: z.string().optional().nullable(),
   clientCity: z.string().optional().nullable(),
@@ -85,7 +96,10 @@ export async function POST(req: NextRequest) {
     const { user, error } = await getUser();
 
     if (error || !user) {
-      return NextResponse.json({ success: false, message: error || "Unauthorized" }, { status: 401 });
+      return NextResponse.json(
+        { success: false, message: error || "Unauthorized" },
+        { status: 401 }
+      );
     }
 
     const formData = await req.formData();
@@ -93,30 +107,44 @@ export async function POST(req: NextRequest) {
     const logoFile = formData.get("logo") as File | null;
 
     if (!rawData) {
-      return NextResponse.json({ success: false, message: "Missing invoice data" }, { status: 400 });
+      return NextResponse.json(
+        { success: false, message: "Missing invoice data" },
+        { status: 400 }
+      );
     }
 
     const parsedData = JSON.parse(rawData);
     const validation = invoiceSchema.safeParse(parsedData);
 
     if (!validation.success) {
-      return NextResponse.json({ success: false, message: validation.error.issues[0].message }, { status: 400 });
+      return NextResponse.json(
+        { success: false, message: validation.error.issues[0].message },
+        { status: 400 }
+      );
     }
 
     const data = validation.data;
 
     const existingInvoice = await prisma.invoice.findUnique({
-      where: { userId_invoiceNumber: { userId: user.id, invoiceNumber: data.invoiceNumber } }
+      where: {
+        userId_invoiceNumber: {
+          userId: user.id,
+          invoiceNumber: data.invoiceNumber,
+        },
+      },
     });
 
     if (existingInvoice) {
-      return NextResponse.json({ success: false, message: "Invoice number already exists" }, { status: 409 });
+      return NextResponse.json(
+        { success: false, message: "Invoice number already exists" },
+        { status: 409 }
+      );
     }
 
     let calculatedSubTotal = 0;
     let calculatedTaxTotal = 0;
 
-    const processedItems = data.items.map(item => {
+    const processedItems = data.items.map((item) => {
       const itemBaseAmount = item.quantity * item.rate;
       const itemTaxAmount = itemBaseAmount * (item.taxRate / 100);
       const finalItemAmount = itemBaseAmount + itemTaxAmount;
@@ -130,24 +158,33 @@ export async function POST(req: NextRequest) {
         rate: item.rate,
         taxRate: item.taxRate,
         amount: finalItemAmount,
+        hsn: item.hsn
       };
     });
 
     const calculatedTotalAmount = calculatedSubTotal + calculatedTaxTotal;
 
     let finalLogoUrl = user.logoUrl;
-    
+
     if (logoFile && logoFile.size > 0) {
-      const { url, error: uploadError } = await uploadImage(logoFile, "invoices");
+      const { url, error: uploadError } = await uploadImage(
+        logoFile,
+        "invoices"
+      );
       if (uploadError || !url) {
-        return NextResponse.json({ success: false, message: uploadError }, { status: 500 });
+        return NextResponse.json(
+          { success: false, message: uploadError },
+          { status: 500 }
+        );
       }
       finalLogoUrl = url;
     }
 
     let dbClient = null;
     if (data.clientId) {
-      dbClient = await prisma.client.findUnique({ where: { id: data.clientId, userId: user.id } });
+      dbClient = await prisma.client.findUnique({
+        where: { id: data.clientId, userId: user.id },
+      });
     }
 
     await prisma.invoice.create({
@@ -160,9 +197,9 @@ export async function POST(req: NextRequest) {
         invoiceNumber: data.invoiceNumber,
         issueDate: data.issueDate,
         dueDate: data.dueDate,
-        
         senderLogoUrl: finalLogoUrl,
-        senderName: data.senderName || user.companyName || user.name || "Unknown Sender",
+        senderName:
+          data.senderName || user.companyName || user.name || "Unknown Sender",
         senderAddress: data.senderAddress || user.companyAddress,
         senderCity: data.senderCity || user.city,
         senderState: data.senderState || user.state,
@@ -172,7 +209,8 @@ export async function POST(req: NextRequest) {
         bankName: data.bankName,
         accountNumber: data.accountNumber,
         ifscCode: data.ifscCode,
-        clientName: dbClient?.companyName || data.clientName || "Unknown Client",
+        clientName:
+          dbClient?.companyName || data.clientName || "Unknown Client",
         clientAddress: dbClient?.address || data.clientAddress,
         clientCity: dbClient?.city || data.clientCity,
         clientState: dbClient?.state || data.clientState,
@@ -194,13 +232,23 @@ export async function POST(req: NextRequest) {
         tableTaxLabel: data.tableTaxLabel,
         tableAmountLabel: data.tableAmountLabel,
 
-        items: { create: processedItems }
-      }
+        items: { create: processedItems },
+        clientCompany: data.clientCompany,
+        clientGSTIN: data.clientGSTIN,
+        senderCompany: data.senderCompany,
+        senderGSTIN: data.senderGSTIN,
+
+      },
     });
 
-    return NextResponse.json({ success: true, message: "Invoice created successfully" }, { status: 201 });
-
+    return NextResponse.json(
+      { success: true, message: "Invoice created successfully" },
+      { status: 201 }
+    );
   } catch {
-    return NextResponse.json({ success: false, message: "Internal Server Error" }, { status: 500 });
+    return NextResponse.json(
+      { success: false, message: "Internal Server Error" },
+      { status: 500 }
+    );
   }
 }

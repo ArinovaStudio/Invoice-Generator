@@ -21,11 +21,15 @@ export async function GET() {
       _sum: { totalAmount: true },
       _count: { id: true },
     });
-
+    const clients = await prisma.client.findMany({
+      where:{
+        userId: user.id
+      }
+    })
     let totalOutstanding = 0;
     let totalPaid = 0;
     let pendingDrafts = 0;
-
+    const totalClients = clients.length;
     groupStats.forEach((group) => {
       if (group.status === 'SENT' || group.status === 'OVERDUE') {
         totalOutstanding += group._sum.totalAmount || 0;
@@ -45,6 +49,7 @@ export async function GET() {
         totalOutstanding,
         totalPaid,
         pendingDrafts,
+        totalClients
       }
     }, { status: 200 });
 

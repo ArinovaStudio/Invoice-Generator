@@ -5,8 +5,8 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Check, ExternalLink, Lock } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { themes,templates } from "@/lib/InvoiceConfig";
-type Theme = {name: string,color: string};
+import { themes, templates } from "@/lib/InvoiceConfig";
+type Theme = { name: string; color: string };
 interface Props {
   invoice: any;
   setInvoice: any;
@@ -14,7 +14,7 @@ interface Props {
   currentColor: Theme;
   setCurrentColor: (theme: Theme) => void;
 
-  clients: any[];
+  // clients: any[];
   isLoggedIn: boolean;
   hasSavedUpi: boolean;
 
@@ -25,9 +25,9 @@ interface Props {
   isDeleting: boolean;
   isAnyActionProcessing: boolean;
 
-  handleClientSelect: (
-    e: React.ChangeEvent<HTMLSelectElement>
-  ) => void;
+  // handleClientSelect: (
+  //   e: React.ChangeEvent<HTMLSelectElement>
+  // ) => void;
 
   handleEmailClick: () => void;
   handleDownloadPDF: () => void;
@@ -41,18 +41,18 @@ export default function InvoiceSettings({
   setInvoice,
   mode,
   isLoggedIn,
-  clients,
+  // clients,
+  // handleClientSelect,
   currentColor,
   setCurrentColor,
-  handleClientSelect,
   handleDelete,
   handleDownloadPDF,
   handleEmailClick,
   handleSaveClick,
   isAnyActionProcessing,
   isDeleting,
-  isEmailing
-}:Props) {
+  isEmailing,
+}: Props) {
   return (
     <div className="relative w-full self-start lg:w-80">
       <div className="sticky top-10">
@@ -65,27 +65,6 @@ export default function InvoiceSettings({
               </h3>
               <div className="h-px bg-gray-100 mt-4" />
             </div>
-
-            {/* Load Client Dropdown (Only for Logged-In Users) */}
-            {isLoggedIn && clients.length > 0 && (
-              <div className="space-y-3">
-                <p className="text-sm font-medium text-gray-700">Load Client</p>
-                <select
-                  value={invoice.clientId || ""}
-                  onChange={handleClientSelect}
-                  className="w-full text-sm border-gray-200 rounded-md p-2 focus:ring-blue-500 focus:border-blue-500 bg-gray-50 border outline-none cursor-pointer"
-                >
-                  <option value="">-- Select saved client --</option>
-                  {clients.map((c) => (
-                    <option key={c.id} value={c.id}>
-                      {c.companyName}
-                    </option>
-                  ))}
-                </select>
-                <div className="h-px bg-gray-100 pt-2" />
-              </div>
-            )}
-
             {/* Theme */}
             <div className="space-y-3">
               <p className="text-sm font-medium text-gray-700">Theme Color</p>
@@ -110,7 +89,7 @@ export default function InvoiceSettings({
                   </div>
                 ))}
               </div>
-              <div className="h-px bg-gray-100 pt-2" />
+              <div className="h-px bg-gray-100" />
             </div>
             <div className="relative pt-2">
               {/* Original Templates Grid */}
@@ -119,28 +98,32 @@ export default function InvoiceSettings({
                   <div key={t.name} className="text-center space-y-2">
                     <div
                       className={cn(
-                        "rounded-lg border p-2 h-24 flex items-center justify-center bg-gray-50 cursor-pointer transition-all",
+                        "rounded-2xl border p-2.5 h-24 flex items-center justify-center cursor-pointer transition-all bg-[hsl(var(--card))]",
                         t.active
-                          ? "border-blue-500 ring-1 ring-blue-500 shadow-sm"
-                          : "border-gray-200 hover:border-blue-300"
+                          ? "border-[hsl(var(--primary))] ring-1 ring-[hsl(var(--primary)/0.35)] shadow-sm"
+                          : "border-[hsl(var(--border))] hover:border-[hsl(var(--primary)/0.45)] hover:bg-[hsl(var(--accent))]"
                       )}
                     >
-                      <div className="w-full h-full flex flex-col gap-1.5 opacity-70">
-                        <div className="h-1.5 bg-gray-300 w-1/3 rounded-full" />
-                        <div className="h-1.5 bg-gray-300 w-1/4 rounded-full" />
-                        <div className="flex-1 border border-gray-200 rounded bg-white mt-1" />
+                      <div className="w-full h-full flex flex-col gap-1.5 opacity-80">
+                        <div className="h-1.5 rounded-full w-1/3 bg-[hsl(var(--muted-foreground)/0.35)]" />
+                        <div className="h-1.5 rounded-full w-1/4 bg-[hsl(var(--muted-foreground)/0.28)]" />
+
+                        <div className="flex-1 rounded-xl border border-[hsl(var(--border))] bg-[hsl(var(--background))] mt-1" />
                       </div>
                     </div>
 
                     <p
                       className={cn(
-                        "text-xs font-medium",
-                        t.active ? "text-blue-600" : "text-gray-600"
+                        "text-xs font-medium flex items-center justify-center gap-1",
+                        t.active
+                          ? "text-[hsl(var(--primary))]"
+                          : "text-[hsl(var(--muted-foreground))]"
                       )}
                     >
                       {t.name}
+
                       {t.name.includes("more") && (
-                        <ExternalLink className="inline w-3 h-3 ml-1" />
+                        <ExternalLink className="w-3 h-3" />
                       )}
                     </p>
                   </div>
@@ -165,23 +148,23 @@ export default function InvoiceSettings({
                 Payment Options
               </p>
 
-              {!isLoggedIn ? (
-                hasSavedUpi ? (
-                  <label className="flex items-center gap-2 rounded-lg border border-gray-100 bg-gray-50 p-3 text-sm text-gray-600 transition-colors hover:bg-gray-100">
-                    <input
-                      type="checkbox"
-                      checked={invoice.includeQrCode}
-                      onChange={(e) =>
-                        setInvoice((p: any) => ({
-                          ...p,
-                          includeQrCode: e.target.checked,
-                        }))
-                      }
-                      className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                    />
-                    Include UPI QR Code
-                  </label>
-                ) : (
+              {isLoggedIn ? (
+                // hasSavedUpi ? (
+                //   <label className="flex items-center gap-2 rounded-lg border border-gray-100 bg-gray-50 p-3 text-sm text-gray-600 transition-colors hover:bg-gray-100">
+                //     <input
+                //       type="checkbox"
+                //       checked={invoice.includeQrCode}
+                //       onChange={(e) =>
+                //         setInvoice((p: any) => ({
+                //           ...p,
+                //           includeQrCode: e.target.checked,
+                //         }))
+                //       }
+                //       className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                //     />
+                //     Include UPI QR Code
+                //   </label>
+                // ) : (
                   <div className="space-y-3 rounded-lg border border-gray-100 bg-gray-50 p-3">
                     {/* Payment Mode Dropdown */}
                     <div className="space-y-2">
@@ -190,26 +173,23 @@ export default function InvoiceSettings({
                       </label>
 
                       <select
-                        value={invoice.paymentMethod || "upi"}
+                        value={invoice.paymentMethod || ""}
                         onChange={(e) =>
                           setInvoice((p: any) => ({
                             ...p,
-                            paymentMethod: e.target.value,
-                            paymentUpiId: "",
-                            bankName: "",
-                            accountNumber: "",
-                            ifscCode: "",
+                            paymentMethod: e.target.value
                           }))
                         }
                         className="w-full rounded-md border border-gray-200 bg-white p-2 text-sm focus:border-blue-500 focus:ring-blue-500"
                       >
+                        <option value="">Don't Attact</option>
                         <option value="upi">UPI</option>
                         <option value="bank">Bank Transfer</option>
                       </select>
                     </div>
 
                     {/* UPI Fields */}
-                    {(invoice.paymentMethod || "upi") === "upi" && (
+                    {(invoice.paymentMethod || "") === "upi" && (
                       <div className="space-y-2">
                         <label className="block text-xs font-medium text-gray-600">
                           UPI ID for Payment QR
@@ -291,7 +271,8 @@ export default function InvoiceSettings({
                     )}
                   </div>
                 )
-              ) : (
+              // )
+               : (
                 <div className="space-y-3">
                   <label
                     className="flex cursor-not-allowed items-center gap-2 rounded-lg border border-gray-100 bg-gray-50 p-3 text-sm text-gray-400 opacity-70"
@@ -335,8 +316,8 @@ export default function InvoiceSettings({
 
             {/* Action Buttons */}
             <div className="flex flex-col gap-3">
-
               <>
+                {/* Save / Update */}
                 <div
                   className={
                     !isLoggedIn ? "cursor-not-allowed relative" : "relative"
@@ -346,19 +327,18 @@ export default function InvoiceSettings({
                   <Button
                     onClick={handleSaveClick}
                     disabled={!isLoggedIn || isAnyActionProcessing}
-                    className={`
-                              w-full
-                            bg-blue-600
-                            hover:bg-blue-700
-                            text-white
-                            font-medium
-                            shadow-sm
-                            transition-all
-                            disabled:cursor-not-allowed
-                            disabled:opacity-60
-                            disabled:hover:bg-blue-600
-                            flex items-center justify-center gap-2
-          `}
+                    className="
+          w-full h-11 rounded-2xl
+          bg-[hsl(var(--primary))]
+          text-[hsl(var(--primary-foreground))]
+          hover:opacity-90
+          font-medium
+          shadow-sm
+          transition-all
+          disabled:cursor-not-allowed
+          disabled:opacity-60
+          flex items-center justify-center gap-2
+        "
                   >
                     {!isLoggedIn && <Lock className="w-4 h-4" />}
 
@@ -370,6 +350,7 @@ export default function InvoiceSettings({
                   </Button>
                 </div>
 
+                {/* Email */}
                 <div
                   className={
                     !isLoggedIn ? "cursor-not-allowed relative" : "relative"
@@ -380,18 +361,18 @@ export default function InvoiceSettings({
                     onClick={handleEmailClick}
                     disabled={!isLoggedIn || isAnyActionProcessing}
                     variant="outline"
-                    className={`
-            w-full
-            border-blue-200
-            text-blue-700
-            hover:bg-blue-50
-            bg-white
-            transition-all
-            disabled:cursor-not-allowed
-            disabled:opacity-60
-            disabled:hover:bg-white
-            flex items-center justify-center gap-2
-          `}
+                    className="
+          w-full h-11 rounded-2xl
+          border-[hsl(var(--border))]
+          bg-[hsl(var(--card))]
+          text-[hsl(var(--foreground))]
+          hover:bg-[hsl(var(--accent))]
+          hover:text-[hsl(var(--accent-foreground))]
+          transition-all
+          disabled:cursor-not-allowed
+          disabled:opacity-60
+          flex items-center justify-center gap-2
+        "
                   >
                     {!isLoggedIn && <Lock className="w-4 h-4" />}
 
@@ -400,28 +381,46 @@ export default function InvoiceSettings({
                 </div>
 
                 {!isLoggedIn && (
-                  <p className="text-xs text-center text-gray-500 mt-2">
-                    Please Login to enable Payments option and Send Email
+                  <p className="text-xs text-center text-[hsl(var(--muted-foreground))] mt-1">
+                    Please login to enable Payments option and Send Email
                     feature.
                   </p>
                 )}
               </>
 
+              {/* Download PDF */}
               <Button
                 variant="outline"
                 onClick={() => handleDownloadPDF()}
                 disabled={isAnyActionProcessing}
-                className="w-full cursor-pointer border-gray-200 text-gray-700 hover:bg-gray-50 bg-white"
+                className="
+      w-full h-11 rounded-2xl
+      border-[hsl(var(--border))]
+      bg-[hsl(var(--card))]
+      text-[hsl(var(--foreground))]
+      hover:bg-[hsl(var(--accent))]
+      hover:text-[hsl(var(--accent-foreground))]
+      transition-all
+    "
               >
                 Download PDF
               </Button>
 
+              {/* Delete */}
               {mode === "update" && (
                 <Button
                   variant="outline"
                   onClick={handleDelete}
                   disabled={isAnyActionProcessing}
-                  className="w-full mt-2 border-red-200 text-red-600 hover:bg-red-50 hover:text-red-700 bg-white"
+                  className="
+        w-full h-11 rounded-2xl
+        border-[hsl(var(--destructive)/0.25)]
+        bg-[hsl(var(--card))]
+        text-[hsl(var(--destructive))]
+        hover:bg-[hsl(var(--destructive)/0.08)]
+        hover:text-[hsl(var(--destructive))]
+        transition-all
+      "
                 >
                   {isDeleting ? "Deleting..." : "Delete Invoice"}
                 </Button>

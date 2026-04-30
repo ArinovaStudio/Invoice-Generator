@@ -40,7 +40,9 @@ const clientSchema = z.object({
   city: z.string().optional().nullable(),
   state: z.string().optional().nullable(),
   zip: z.string().optional().nullable(),
-  country: z.string().default("India").optional().nullable(),
+  country: z.string().default("IN").optional().nullable(),
+  companyGstin: z.string().min(1,"Company Gstin Is Required"),
+  name: z.string().min(1,"Name is Required!")
 });
 
 export async function POST(req: NextRequest) {
@@ -58,7 +60,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json( { success: false, message: validation.error.issues[0].message }, { status: 400 } );
     }
 
-    const { companyName, email, address, city, state, zip, country } = validation.data;
+    const { companyName, email, address, city, state, zip, country,companyGstin,name } = validation.data;
 
     const existingClient = await prisma.client.findFirst({ where: { userId: user.id, companyName } });
 
@@ -67,7 +69,7 @@ export async function POST(req: NextRequest) {
     }
 
     await prisma.client.create({
-      data: { userId: user.id, companyName, email, address, city, state, zip, country }
+      data: { userId: user.id, companyName, email, address, city, state, zip, country,companyGstin,name }
     });
 
     return NextResponse.json({ success: true, message: "Client saved successfully" }, { status: 201 });

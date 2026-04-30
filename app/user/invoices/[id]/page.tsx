@@ -31,14 +31,14 @@ export default function UpdateInvoicePage() {
       .catch((err) => console.error("Error fetching invoice:", err));
   }, [id]);
 
-  if (!data) {
-    return (
-      <div className="min-h-screen w-full flex flex-col items-center justify-center text-slate-500 gap-4">
-        <Loader2 className="animate-spin w-8 h-8 text-blue-600" />
-        <span className="font-medium">Loading Invoice Data...</span>
-      </div>
-    );
-  }
+  // if (!data) {
+  //   return (
+  //     <div className="min-h-screen w-full flex flex-col items-center justify-center text-slate-500 gap-4">
+  //       <Loader2 className="animate-spin w-8 h-8 text-blue-600" />
+  //       <span className="font-medium">Loading Invoice Data...</span>
+  //     </div>
+  //   );
+  // }
 
   return <InvoiceLayout mode="update" initialData={data} invoiceId={id as string} />;
 }

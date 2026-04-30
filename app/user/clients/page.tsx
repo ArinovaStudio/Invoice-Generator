@@ -2,12 +2,16 @@
 
 import { useState, useEffect } from "react";
 import ConfirmModal from "@/components/ConfirmModal";
+import { City, State } from "country-state-city";
+import { handleKeyDown } from "@/lib/InputKeyDown";
+import { toast } from "sonner";
+import LoadingComponent from "@/components/LoadingComponent";
 
 export default function ClientsPage() {
   const [clients, setClients] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
-  
+
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -18,10 +22,16 @@ export default function ClientsPage() {
     city: "",
     state: "",
     zip: "",
-    country: "India",
+    country: "IN",
+    companyGstin: "",
+    name: "",
   });
 
-  const [deleteModal, setDeleteModal] = useState<{ isOpen: boolean; clientId: string; companyName: string }>({
+  const [deleteModal, setDeleteModal] = useState<{
+    isOpen: boolean;
+    clientId: string;
+    companyName: string;
+  }>({
     isOpen: false,
     clientId: "",
     companyName: "",
@@ -29,12 +39,12 @@ export default function ClientsPage() {
 
   useEffect(() => {
     const fetchClients = async () => {
-      setLoading(true);
       try {
-        const url = searchQuery 
-          ? `/api/user/clients?search=${encodeURIComponent(searchQuery)}` 
+        setLoading(true);
+        const url = searchQuery
+          ? `/api/user/clients?search=${encodeURIComponent(searchQuery)}`
           : "/api/user/clients";
-        
+
         const res = await fetch(url);
         const data = await res.json();
         if (data.success) setClients(data.clients);
@@ -45,12 +55,16 @@ export default function ClientsPage() {
       }
     };
 
-    const timeoutId = setTimeout(() => { fetchClients(); }, 300);
+    const timeoutId = setTimeout(() => {
+      fetchClients();
+    }, 300);
     return () => clearTimeout(timeoutId);
   }, [searchQuery]);
 
   // Handle Form Inputs
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+  const handleChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
+  ) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
@@ -65,11 +79,23 @@ export default function ClientsPage() {
         city: client.city || "",
         state: client.state || "",
         zip: client.zip || "",
-        country: client.country || "India",
+        country: client.country || "IN",
+        companyGstin: client.companyGstin || "",
+        name: client.name || "",
       });
     } else {
       setEditingId(null);
-      setFormData({ companyName: "", email: "", address: "", city: "", state: "", zip: "", country: "India" });
+      setFormData({
+        companyName: "",
+        email: "",
+        address: "",
+        city: "",
+        state: "",
+        zip: "",
+        country: "IN",
+        name: "",
+        companyGstin: "",
+      });
     }
     setIsFormOpen(true);
   };
@@ -79,7 +105,9 @@ export default function ClientsPage() {
     setIsSubmitting(true);
 
     try {
-      const url = editingId ? `/api/user/clients/${editingId}` : "/api/user/clients";
+      const url = editingId
+        ? `/api/user/clients/${editingId}`
+        : "/api/user/clients";
       const method = editingId ? "PUT" : "POST";
 
       const res = await fetch(url, {
@@ -92,14 +120,18 @@ export default function ClientsPage() {
 
       if (res.ok) {
         setIsFormOpen(false);
-        const refreshRes = await fetch(searchQuery ? `/api/user/clients?search=${encodeURIComponent(searchQuery)}` : "/api/user/clients");
+        const refreshRes = await fetch(
+          searchQuery
+            ? `/api/user/clients?search=${encodeURIComponent(searchQuery)}`
+            : "/api/user/clients"
+        );
         const refreshData = await refreshRes.json();
         if (refreshData.success) setClients(refreshData.clients);
       } else {
-        alert("Error: " + data.message);
+        toast.error("Error: " + data.message);
       }
     } catch {
-      alert("An error occurred while saving.");
+      toast.error("An error occurred while saving.");
     } finally {
       setIsSubmitting(false);
     }
@@ -107,90 +139,155 @@ export default function ClientsPage() {
 
   const executeDelete = async () => {
     try {
-      const res = await fetch(`/api/user/clients/${deleteModal.clientId}`, { method: "DELETE" });
+      const res = await fetch(`/api/user/clients/${deleteModal.clientId}`, {
+        method: "DELETE",
+      });
       if (res.ok) {
-        setClients(clients.filter(c => c.id !== deleteModal.clientId));
+        setClients(clients.filter((c) => c.id !== deleteModal.clientId));
       } else {
         const data = await res.json();
-        alert("Failed to delete: " + data.message);
+        toast.error("Failed to delete: " + data.message);
       }
     } catch {
-      alert("Error deleting client.");
+      toast.error("Error deleting client.");
     }
   };
 
-  const inputStyles = "w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 focus:ring-2 focus:ring-blue-500/40 focus:border-blue-500 transition-all outline-none font-medium text-slate-900";
-  const labelStyles = "text-[12px] uppercase tracking-wider font-bold text-slate-500 mb-2 block";
+  const inputStyles =
+    "w-full bg-[hsl(var(--background))] border border-[hsl(var(--border))] rounded-2xl px-4 py-3 text-sm font-medium text-[hsl(var(--foreground))] outline-none transition-colors placeholder:text-[hsl(var(--muted-foreground))] focus:border-[hsl(var(--primary))] focus:ring-2 focus:ring-[hsl(var(--primary)/0.18)]";
 
+  const labelStyles =
+    "mb-2 block text-[11px] font-semibold uppercase tracking-wider text-[hsl(var(--muted-foreground))]";
+
+  if (loading) {
+    return <LoadingComponent text={"Loading Clients..."} />;
+  }
   return (
-    <div className="flex-1 overflow-y-auto p-8 lg:p-12 bg-[#f8f9ff]">
+    <div className="flex-1 overflow-y-auto p-8 lg:p-12 bg-[hsl(var(--background))]">
       <div className="max-w-6xl mx-auto">
-        
-        {/* Header & Search */}
-        <div className="flex flex-col md:flex-row md:items-end justify-between mb-10 gap-6">
+        {/* Header */}
+        <div className="flex flex-col md:flex-row md:items-end justify-between mb-7 gap-4">
           <div>
-            <h2 className="text-3xl font-black text-slate-900 tracking-tight mb-2">Clients</h2>
-            <p className="text-slate-500 font-medium">Manage your client directory and billing details.</p>
+            <h2 className="text-2xl md:text-3xl font-bold tracking-tight text-[hsl(var(--foreground))]">
+              Clients
+            </h2>
+            <p className="text-sm mt-1 text-[hsl(var(--muted-foreground))]">
+              Manage your client directory and billing details.
+            </p>
           </div>
-          
-          <div className="flex flex-col sm:flex-row gap-4 w-full md:w-auto">
+
+          <div className="flex flex-col sm:flex-row gap-3 w-full md:w-auto">
             <div className="relative w-full sm:w-72">
-              <input 
-                type="text" 
-                placeholder="Search clients..." 
+              <input
+                type="text"
+                placeholder="Search clients..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full bg-white border border-slate-200 rounded-xl pl-11 pr-4 py-3 focus:ring-2 focus:ring-blue-500/40 focus:border-blue-500 transition-all outline-none font-medium text-slate-900 shadow-sm"
+                className="w-full h-10 bg-[hsl(var(--card))] border border-[hsl(var(--border))] rounded-lg pl-10 pr-4 text-sm text-[hsl(var(--foreground))] outline-none focus:ring-2 focus:ring-[hsl(var(--primary)/0.2)] focus:border-[hsl(var(--primary))] transition"
               />
-              <span className="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-slate-400">search</span>
+              <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-[18px] text-[hsl(var(--muted-foreground))]">
+                search
+              </span>
             </div>
-            
-            <button onClick={() => openForm()} className="shrink-0 bg-blue-600 text-white px-6 py-3 rounded-xl font-bold shadow-lg hover:bg-blue-700 active:scale-95 transition-all flex items-center justify-center gap-2">
-              <span className="material-symbols-outlined text-xl">add</span>
+
+            <button
+              onClick={() => openForm()}
+              className="h-10 px-4 rounded-lg bg-[hsl(var(--primary))] text-[hsl(var(--primary-foreground))] text-sm font-semibold hover:opacity-90 transition flex items-center justify-center gap-1.5"
+            >
+              <span className="material-symbols-outlined text-[18px]">add</span>
               Add Client
             </button>
           </div>
         </div>
 
-        {/* Data Table */}
-        <div className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
+        {/* Table */}
+        <div className="bg-[hsl(var(--card))] rounded-xl border border-[hsl(var(--border))] overflow-hidden">
           <div className="overflow-x-auto">
-            <table className="w-full text-left border-collapse">
+            <table className="w-full text-left">
               <thead>
-                <tr className="bg-slate-50/50 border-b border-slate-100">
-                  <th className="px-8 py-4 text-[11px] uppercase tracking-widest text-slate-500 font-bold">Company / Client</th>
-                  <th className="px-8 py-4 text-[11px] uppercase tracking-widest text-slate-500 font-bold">Contact Email</th>
-                  <th className="px-8 py-4 text-[11px] uppercase tracking-widest text-slate-500 font-bold">Location</th>
-                  <th className="px-8 py-4 text-[11px] uppercase tracking-widest text-slate-500 font-bold text-right">Actions</th>
+                <tr className="bg-[hsl(var(--muted)/0.45)] border-b border-[hsl(var(--border))]">
+                  <th className="px-6 py-3 text-[11px] uppercase tracking-wider font-semibold text-[hsl(var(--muted-foreground))]">
+                    Company / Client
+                  </th>
+                  <th className="px-6 py-3 text-[11px] uppercase tracking-wider font-semibold text-[hsl(var(--muted-foreground))]">
+                    Contact Email
+                  </th>
+                  <th className="px-6 py-3 text-[11px] uppercase tracking-wider font-semibold text-[hsl(var(--muted-foreground))]">
+                    Location
+                  </th>
+                  <th className="px-6 py-3 text-[11px] uppercase tracking-wider font-semibold text-right text-[hsl(var(--muted-foreground))]">
+                    Actions
+                  </th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-100">
+
+              <tbody className="divide-y divide-[hsl(var(--border))]">
                 {loading ? (
-                  <tr><td colSpan={4} className="text-center py-12 text-slate-400 font-medium">Loading directory...</td></tr>
+                  <tr>
+                    <td
+                      colSpan={4}
+                      className="py-10 text-center text-sm text-[hsl(var(--muted-foreground))]"
+                    >
+                      Loading directory...
+                    </td>
+                  </tr>
                 ) : clients.length === 0 ? (
                   <tr>
-                    <td colSpan={4} className="text-center py-12">
+                    <td colSpan={4} className="py-10 text-center">
                       <div className="flex flex-col items-center gap-2">
-                        <span className="material-symbols-outlined text-4xl text-slate-300">folder_open</span>
-                        <p className="text-slate-500 font-medium">No clients found.</p>
+                        <span className="material-symbols-outlined text-3xl text-[hsl(var(--muted-foreground))] opacity-50">
+                          folder_open
+                        </span>
+                        <p className="text-sm text-[hsl(var(--muted-foreground))]">
+                          No clients found.
+                        </p>
                       </div>
                     </td>
                   </tr>
                 ) : (
                   clients.map((client) => (
-                    <tr key={client.id} className="group hover:bg-slate-50 transition-colors">
-                      <td className="px-8 py-5 font-bold text-slate-900">{client.companyName}</td>
-                      <td className="px-8 py-5 text-slate-500 font-medium">{client.email || "—"}</td>
-                      <td className="px-8 py-5 text-slate-500 font-medium">
-                        {client.city ? `${client.city}, ${client.country}` : client.country}
+                    <tr
+                      key={client.id}
+                      className="group hover:bg-[hsl(var(--accent)/0.45)] transition-colors"
+                    >
+                      <td className="px-6 py-4 text-[14px] font-semibold text-[hsl(var(--foreground))]">
+                        {client.companyName}
                       </td>
-                      <td className="px-8 py-5 text-right">
-                        <div className="flex justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                          <button onClick={() => openForm(client)} className="p-2 bg-white border border-slate-200 rounded-lg text-slate-500 hover:text-blue-600 hover:border-blue-200 shadow-sm transition-all">
-                            <span className="material-symbols-outlined text-[20px]">edit</span>
+
+                      <td className="px-6 py-4 text-[13px] text-[hsl(var(--muted-foreground))]">
+                        {client.email || "—"}
+                      </td>
+
+                      <td className="px-6 py-4 text-[13px] text-[hsl(var(--muted-foreground))]">
+                        {client.city
+                          ? `${client.city}, ${client.country}`
+                          : client.country}
+                      </td>
+
+                      <td className="px-6 py-4 text-right">
+                        <div className="flex justify-end gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity">
+                          <button
+                            onClick={() => openForm(client)}
+                            className="h-8 w-8 rounded-md bg-[hsl(var(--muted)/0.6)] text-[hsl(var(--muted-foreground))] hover:bg-[hsl(var(--accent))] hover:text-[hsl(var(--primary))] flex items-center justify-center transition"
+                          >
+                            <span className="material-symbols-outlined text-[18px]">
+                              edit
+                            </span>
                           </button>
-                          <button onClick={() => setDeleteModal({ isOpen: true, clientId: client.id, companyName: client.companyName })} className="p-2 bg-white border border-slate-200 rounded-lg text-slate-500 hover:text-red-600 hover:border-red-200 shadow-sm transition-all">
-                            <span className="material-symbols-outlined text-[20px]">delete</span>
+
+                          <button
+                            onClick={() =>
+                              setDeleteModal({
+                                isOpen: true,
+                                clientId: client.id,
+                                companyName: client.companyName,
+                              })
+                            }
+                            className="h-8 w-8 rounded-md bg-[hsl(var(--muted)/0.6)] text-[hsl(var(--muted-foreground))] hover:bg-[hsl(var(--destructive)/0.12)] hover:text-[hsl(var(--destructive))] flex items-center justify-center transition"
+                          >
+                            <span className="material-symbols-outlined text-[18px]">
+                              delete
+                            </span>
                           </button>
                         </div>
                       </td>
@@ -201,59 +298,184 @@ export default function ClientsPage() {
             </table>
           </div>
         </div>
-
       </div>
 
       {/* Add / Edit Form Modal */}
       {isFormOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 backdrop-blur-sm px-4">
-          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-200 max-h-[90vh] flex flex-col">
-            <div className="p-6 md:p-8 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
-              <h3 className="text-xl font-bold text-slate-900">
+          <div className="bg-white rounded-xl shadow-2xl w-full max-w-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-200 max-h-[90vh] flex flex-col">
+            {/* Header */}
+            <div className="px-4 sm:px-5 py-4 border-b border-slate-100 flex items-center justify-between bg-slate-50">
+              <h3 className="text-base sm:text-lg font-semibold text-slate-900">
                 {editingId ? "Edit Client" : "New Client"}
               </h3>
-              <button onClick={() => setIsFormOpen(false)} className="text-slate-400 hover:text-slate-600">
-                <span className="material-symbols-outlined">close</span>
+
+              <button
+                onClick={() => setIsFormOpen(false)}
+                className="w-8 h-8 rounded-md flex items-center justify-center text-slate-400 hover:bg-white hover:text-slate-700 transition"
+              >
+                <span className="material-symbols-outlined text-[20px]">
+                  close
+                </span>
               </button>
             </div>
-            
-            <form onSubmit={handleSubmit} className="p-6 md:p-8 overflow-y-auto space-y-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="md:col-span-2">
-                  <label className={labelStyles}>Company / Client Name *</label>
-                  <input required name="companyName" value={formData.companyName} onChange={handleChange} className={inputStyles} placeholder="Studio Vertex Architecture" />
+
+            {/* Form */}
+            <form
+              onSubmit={handleSubmit}
+              className="px-4 sm:px-5 py-4 overflow-y-auto space-y-5"
+            >
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                {/* Company Name */}
+                <div>
+                  <label className={labelStyles}>Company Name *</label>
+                  <input
+                    required
+                    name="companyName"
+                    value={formData.companyName}
+                    onChange={handleChange}
+                    className={inputStyles}
+                    placeholder="Studio Vertex Pvt Ltd"
+                  />
                 </div>
-                <div className="md:col-span-2">
-                  <label className={labelStyles}>Contact Email</label>
-                  <input required type="email" name="email" value={formData.email} onChange={handleChange} className={inputStyles} placeholder="billing@client.com" />
+
+                {/* Client Name */}
+                <div>
+                  <label className={labelStyles}>Client Name *</label>
+                  <input
+                    required
+                    name="name"
+                    value={formData.name}
+                    onChange={handleChange}
+                    className={inputStyles}
+                    placeholder="John Smith"
+                  />
                 </div>
-                <div className="md:col-span-2">
+
+                {/* Email */}
+                <div className="sm:col-span-2">
+                  <label className={labelStyles}>Contact Email *</label>
+                  <input
+                    required
+                    type="email"
+                    name="email"
+                    value={formData.email}
+                    onChange={handleChange}
+                    className={inputStyles}
+                    placeholder="billing@client.com"
+                  />
+                </div>
+
+                {/* GSTIN */}
+                <div className="sm:col-span-2">
+                  <label className={labelStyles}>Company GSTIN</label>
+                  <input
+                    name="companyGstin"
+                    value={formData.companyGstin}
+                    onChange={handleChange}
+                    className={inputStyles}
+                    placeholder="GSTIN Number"
+                  />
+                </div>
+
+                {/* Address */}
+                <div className="sm:col-span-2">
                   <label className={labelStyles}>Billing Address</label>
-                  <input name="address" value={formData.address} onChange={handleChange} className={inputStyles} placeholder="Street Name, Building No." />
+                  <input
+                    name="address"
+                    value={formData.address}
+                    onChange={handleChange}
+                    className={inputStyles}
+                    placeholder="Street / Building"
+                  />
                 </div>
-                <div>
-                  <label className={labelStyles}>City</label>
-                  <input name="city" value={formData.city} onChange={handleChange} className={inputStyles} placeholder="City" />
-                </div>
-                <div>
-                  <label className={labelStyles}>State / Province</label>
-                  <input name="state" value={formData.state} onChange={handleChange} className={inputStyles} placeholder="State" />
-                </div>
-                <div>
-                  <label className={labelStyles}>ZIP / Postal Code</label>
-                  <input name="zip" value={formData.zip} onChange={handleChange} className={inputStyles} placeholder="ZIP" />
-                </div>
+
+                {/* Country */}
                 <div>
                   <label className={labelStyles}>Country</label>
-                  <input name="country" value={formData.country} onChange={handleChange} className={inputStyles} placeholder="Country" />
+                  <select
+                    name="country"
+                    value={formData.country}
+                    onChange={handleChange}
+                    className={inputStyles}
+                  >
+                    <option value="IN">India</option>
+                  </select>
+                </div>
+
+                {/* State */}
+                <div>
+                  <label className={labelStyles}>State</label>
+                  <select
+                    name="state"
+                    value={formData.state}
+                    onChange={handleChange}
+                    className={inputStyles}
+                  >
+                    <option value="">Select State</option>
+
+                    {State.getStatesOfCountry(formData.country || "IN").map(
+                      (state) => (
+                        <option key={state.isoCode} value={state.isoCode}>
+                          {state.name}
+                        </option>
+                      )
+                    )}
+                  </select>
+                </div>
+
+                {/* City */}
+                <div>
+                  <label className={labelStyles}>City</label>
+                  <select
+                    name="city"
+                    value={formData.city}
+                    onChange={handleChange}
+                    disabled={!formData.state}
+                    className={inputStyles}
+                  >
+                    <option value="">Select City</option>
+
+                    {City.getCitiesOfState(
+                      formData.country || "IN",
+                      formData.state
+                    ).map((city) => (
+                      <option key={city.name} value={city.name}>
+                        {city.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                {/* ZIP */}
+                <div>
+                  <label className={labelStyles}>ZIP Code</label>
+                  <input
+                    name="zip"
+                    value={formData?.zip?.slice(0, 6)}
+                    onKeyDownCapture={handleKeyDown}
+                    onChange={handleChange}
+                    className={inputStyles}
+                    placeholder="ZIP Code"
+                  />
                 </div>
               </div>
 
-              <div className="pt-4 flex justify-end gap-3 border-t border-slate-100 mt-6">
-                <button type="button" onClick={() => setIsFormOpen(false)} className="px-6 py-3 rounded-xl text-slate-500 font-bold hover:bg-slate-100 transition-colors">
+              {/* Footer */}
+              <div className="pt-4 mt-1 border-t border-slate-100 flex flex-col-reverse sm:flex-row justify-end gap-2.5">
+                <button
+                  type="button"
+                  onClick={() => setIsFormOpen(false)}
+                  className="w-full sm:w-auto px-5 py-2.5 rounded-lg border border-slate-200 text-sm text-slate-600 font-medium hover:bg-slate-50 transition"
+                >
                   Cancel
                 </button>
-                <button type="submit" disabled={isSubmitting} className="px-8 py-3 rounded-xl bg-blue-600 text-white font-bold shadow-lg shadow-blue-200 hover:bg-blue-700 active:scale-95 transition-all disabled:opacity-50">
+
+                <button
+                  type="submit"
+                  disabled={isSubmitting}
+                  className="w-full sm:w-auto px-6 py-2.5 rounded-lg bg-blue-600 text-white text-sm font-medium hover:bg-blue-700 active:scale-95 transition disabled:opacity-50"
+                >
                   {isSubmitting ? "Saving..." : "Save Client"}
                 </button>
               </div>
@@ -265,7 +487,9 @@ export default function ClientsPage() {
       {/* Delete Confirmation Modal */}
       <ConfirmModal
         isOpen={deleteModal.isOpen}
-        onClose={() => setDeleteModal({ isOpen: false, clientId: "", companyName: "" })}
+        onClose={() =>
+          setDeleteModal({ isOpen: false, clientId: "", companyName: "" })
+        }
         onConfirm={executeDelete}
         title="Delete Client"
         message={`Are you sure you want to remove ${deleteModal.companyName} from your directory? Invoices attached to this client will remain in your history, but the link to this profile will be broken.`}

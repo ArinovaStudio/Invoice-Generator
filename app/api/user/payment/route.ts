@@ -11,7 +11,6 @@ export async function GET() {
     }
 
     const paymentDetails = await prisma.paymentDetails.findUnique({ where: { userId: user.id } });
-
     return NextResponse.json({ success: true, paymentDetails: paymentDetails || {} }, { status: 200 });
 
   } catch {

@@ -20,6 +20,7 @@ export async function GET() {
       zip: user.zip,
       country: user.country,
       logoUrl: user.logoUrl,
+      companyGstin: user.companyGstin,
     };
 
     return NextResponse.json({ success: true, profile: profileData }, { status: 200 });
@@ -39,11 +40,12 @@ export async function PUT(req: NextRequest) {
     
     const companyName = formData.get("companyName") as string | null;
     const companyAddress = formData.get("companyAddress") as string | null;
+    const companyGstin = formData.get("companyGstin") as string;
+    const name = formData.get("name") as string;
     const city = formData.get("city") as string | null;
     const state = formData.get("state") as string | null;
     const zip = formData.get("zip") as string | null;
     const country = formData.get("country") as string | null;
-
     const logoFile = formData.get("logo") as File | null;
     let logoUrl = user.logoUrl; 
 
@@ -79,6 +81,8 @@ export async function PUT(req: NextRequest) {
         ...(state !== null && { state }),
         ...(zip !== null && { zip }),
         ...(country !== null && { country }),
+        ...(companyGstin !== null && { companyGstin }),
+        ...(name !== null && { name }),
         logoUrl,
       }
     });

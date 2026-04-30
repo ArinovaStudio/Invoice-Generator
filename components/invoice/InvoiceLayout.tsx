@@ -7,6 +7,9 @@ import InvoiceForm from "./InvoiceForm";
 import InvoiceSettings from "./InvoiceSettings";
 import { getUser } from "@/lib/auth";
 import { useSession } from "next-auth/react";
+import { Loader2 } from "lucide-react";
+import { toast } from "sonner";
+import LoadingComponent from "../LoadingComponent";
 export interface InvoiceLayoutProps {
   initialData?: any;
   mode?: "create" | "update";
@@ -23,7 +26,6 @@ export default function page({
 
   const [currentColor, setCurrentColor] = useState(themes[0]);
   const [selectedCurrency, setSelectedCurrency] = useState(currencies[0]);
-
   const [loading, setLoading] = useState(true);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [hasSavedUpi, setHasSavedUpi] = useState(false);
@@ -95,58 +97,65 @@ export default function page({
   });
   const [pdfMode, setPdfMode] = useState(false);
   const tapToPayRef = useRef(null);
-  
 
-  const {data: session, status} = useSession()
+  const { data: session, status } = useSession();
 
-      const fetchDefaults = async () => {
-      try {
-        const [profileRes, paymentRes, clientsRes] = await Promise.all([
-          fetch("/api/user/profile"),
-          fetch("/api/user/payment"),
-          fetch("/api/user/clients"),
-        ]);
-        if (profileRes.ok) {
-          setIsLoggedIn(true);
-          const profileData = await profileRes.json();
-          const user = profileData.profile || {};
+  const fetchDefaults = async () => {
+    try {
+      setLoading(true);
+      const [profileRes, paymentRes, clientsRes] = await Promise.all([
+        fetch("/api/user/profile"),
+        fetch("/api/user/payment"),
+        fetch("/api/user/clients"),
+      ]);
+      if (profileRes.ok) {
+        setIsLoggedIn(true);
+        const profileData = await profileRes.json();
+        const user = profileData.profile || {};
 
-          if (mode === "create") {
-            if (user.logoUrl) setLogoPreview(user.logoUrl);
-            setInvoice((prev: any) => ({
-              ...prev,
-              senderCompany: user.companyName || "",
-              senderName: user.name || "",
-              senderAddress: user.companyAddress || "",
-              // senderCityZip: `${user.city || ""} ${user.zip || ""}`.trim(),
-            }));
-          }
+        if (mode === "create") {
+          if (user.logoUrl) setLogoPreview(user.logoUrl);
+          setInvoice((prev: any) => ({
+            ...prev,
+            senderCompany: user.companyName || "",
+            senderName: user.name || "",
+            senderAddress: user.companyAddress || "",
+            senderCountry: user.country || "IN",
+            senderState: user.state || "",
+            senderCity: user.city || "",
+            senderGSTIN: user.companyGstin || "",
+            senderZip: user.zip || "",
+            // senderCityZip: `${user.city || ""} ${user.zip || ""}`.trim(),
+          }));
         }
-
-        if (paymentRes.ok) {
-          const paymentData = await paymentRes.json();
-          if (paymentData.paymentDetails?.upiId) {
-            setHasSavedUpi(true);
-            if (mode === "create") {
-              setInvoice((prev: any) => ({
-                ...prev,
-                paymentUpiId: paymentData.paymentDetails.upiId,
-                includeQrCode: true,
-              }));
-            }
-          }
-        }
-
-        if (clientsRes.ok) {
-          const clientsData = await clientsRes.json();
-          setClients(clientsData.clients || []);
-        }
-      } catch (error) {
-        console.error("Failed to load user defaults", error);
-      } finally {
-        setLoading(false);
       }
-    };
+
+      if (paymentRes.ok) {
+        const paymentData = await paymentRes.json();
+        if (paymentData.paymentDetails?.upiId) {
+          setHasSavedUpi(true);
+        }
+        if (mode === "create") {
+          setInvoice((prev: any) => ({
+            ...prev,
+            paymentUpiId: paymentData.paymentDetails.upiId,
+            bankName: paymentData.paymentDetails.bankName,
+            accountNumber: paymentData.paymentDetails.accountNumber,
+            ifscCode: paymentData.paymentDetails.ifscCode,
+          }));
+        }
+      }
+
+      if (clientsRes.ok) {
+        const clientsData = await clientsRes.json();
+        setClients(clientsData.clients || []);
+      }
+    } catch (error) {
+      console.error("Failed to load user defaults", error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
     if (session) {
@@ -162,11 +171,10 @@ export default function page({
 
   const handleDownloadPDF = async () => {
     if (!invoiceRef.current) return;
+
     try {
       setPdfMode(true);
-
-      // wait for UI update
-      await new Promise((resolve) => setTimeout(resolve, 300));
+      await new Promise((resolve) => setTimeout(resolve, 400));
 
       const { domToJpeg } = await import("modern-screenshot");
       const { jsPDF } = await import("jspdf");
@@ -186,54 +194,99 @@ export default function page({
       });
 
       const pdf = new jsPDF("p", "mm", "a4");
-
       const pageWidth = pdf.internal.pageSize.getWidth();
       const pageHeight = pdf.internal.pageSize.getHeight();
-
       const margin = 10;
       const usableWidth = pageWidth - margin * 2;
       const usableHeight = pageHeight - margin * 2;
 
+      const img = new Image();
+      img.src = dataUrl;
+      await new Promise((res) => (img.onload = res));
+
       const imgProps = pdf.getImageProperties(dataUrl);
+      const imgWidth = usableWidth;
+      const imgHeight = (imgProps.height * imgWidth) / imgProps.width;
 
-      // image scaled to page width
-      const imgHeight = (imgProps.height * usableWidth) / imgProps.width;
+      // FIX 1: if it fits on one page, just add it directly — no slicing needed
+      if (imgHeight <= usableHeight) {
+        const clampedHeight = Math.min(imgHeight, usableHeight);
+        pdf.addImage(
+          dataUrl,
+          "JPEG",
+          margin,
+          margin,
+          imgWidth,
+          clampedHeight,
+          undefined,
+          "FAST"
+        );
+      } else {
+        // FIX 2: no SAFE_GAP, exact math
+        // FIX 5: use Math.ceil to avoid fractional mm overflow
+        const pxPerMm = Math.ceil(imgProps.width / imgWidth);
+        const pageHeightPx = Math.floor(usableHeight * pxPerMm);
 
-      let heightLeft = imgHeight;
-      let position = margin;
+        let y = 0;
+        let pageIndex = 0;
 
-      // first page
-      pdf.addImage(dataUrl, "JPEG", margin, position, usableWidth, imgHeight);
+        while (y < imgProps.height) {
+          if (pageIndex > 0) pdf.addPage();
 
-      heightLeft -= usableHeight;
+          // FIX 2: exact slice — no arbitrary gap
+          const sliceHeight = Math.min(pageHeightPx, imgProps.height - y);
 
-      const minRemainingHeight = 20;
+          const canvas = document.createElement("canvas");
+          const ctx = canvas.getContext("2d")!;
+          canvas.width = imgProps.width;
+          canvas.height = sliceHeight;
 
-      while (heightLeft > minRemainingHeight) {
-        position = heightLeft - imgHeight + margin;
+          ctx.drawImage(
+            img,
+            0,
+            y,
+            imgProps.width,
+            sliceHeight,
+            0,
+            0,
+            canvas.width,
+            canvas.height
+          );
 
-        pdf.addPage();
-        pdf.addImage(dataUrl, "JPEG", margin, position, usableWidth, imgHeight);
+          const cropped = canvas.toDataURL("image/jpeg", 1.0);
 
-        heightLeft -= usableHeight;
+          // FIX 3: render height relative to this slice, not total image height
+          const renderHeight = (sliceHeight / pageHeightPx) * usableHeight;
+
+          pdf.addImage(
+            cropped,
+            "JPEG",
+            margin,
+            margin,
+            imgWidth,
+            renderHeight,
+            undefined,
+            "FAST"
+          );
+
+          y += sliceHeight;
+          pageIndex++;
+        }
       }
 
-      /* -----------------------------------------
-       MAKE EXISTING PAY BUTTON CLICKABLE
-       Add id="upi-pay-btn" on your button
-    ----------------------------------------- */
-
-
-      if (tapToPayRef.current && invoice.paymentMethod === "upi" && invoice.paymentUpiId) {
-        const btn = tapToPayRef.current! as HTMLButtonElement;
+      // UPI link placement
+      if (
+        tapToPayRef.current &&
+        invoice.paymentMethod === "upi" &&
+        invoice.paymentUpiId
+      ) {
+        const btn = tapToPayRef.current as HTMLButtonElement;
         const btnRect = btn.getBoundingClientRect();
         const parentRect = element.getBoundingClientRect();
 
-        // relative button position inside invoice
         const relativeX = btnRect.left - parentRect.left;
         const relativeY = btnRect.top - parentRect.top;
 
-        // px -> mm scale
         const scale = usableWidth / element.scrollWidth;
 
         const pdfX = margin + relativeX * scale;
@@ -241,16 +294,13 @@ export default function page({
         const pdfW = btnRect.width * scale;
         const pdfH = btnRect.height * scale;
 
-        // detect page number
-        const pageIndex = Math.floor((pdfYGlobal - margin) / usableHeight) + 1;
-
-        // y inside selected page
+        // FIX 4: use usableHeight (not pageHeight) for page boundary math
+        const targetPage = Math.floor((pdfYGlobal - margin) / usableHeight) + 1;
         const pdfY = margin + ((pdfYGlobal - margin) % usableHeight);
 
         const totalPages = pdf.getNumberOfPages();
-
-        if (pageIndex <= totalPages) {
-          pdf.setPage(pageIndex);
+        if (targetPage <= totalPages) {
+          pdf.setPage(targetPage);
 
           const upiLink = `upi://pay?pa=${encodeURIComponent(
             invoice.paymentUpiId
@@ -260,13 +310,11 @@ export default function page({
             `Payment of ${invoice.senderCompany || invoice.senderName}`
           )}`;
 
-          pdf.link(pdfX, pdfY, pdfW, pdfH, {
-            url: upiLink,
-          });
+          pdf.link(pdfX, pdfY, pdfW, pdfH, { url: upiLink });
         }
       }
 
-      pdf.save(`${invoice.invoiceNumber}.pdf`);
+      pdf.save(`${invoice.invoiceNumber || "invoice"}.pdf`);
     } catch (error) {
       console.error("PDF generation failed:", error);
     } finally {
@@ -297,7 +345,11 @@ export default function page({
         clientName: "",
         clientAddress: "",
         clientCityZip: "",
-        clientCountry: "India",
+        clientCountry: "IN",
+        clientState: "",
+        clientCity: "",
+        clientZip: "",
+        clientGSTIN: "",
       }));
       return;
     }
@@ -312,7 +364,11 @@ export default function page({
         clientCityZip: `${client.city || ""} ${client.state || ""} ${
           client.zip || ""
         }`.trim(),
-        clientCountry: client.country || "India",
+        clientCountry: client.country || "IN",
+        clientGSTIN: client.companyGstin || "",
+        clientState: client.state || "",
+        clientCity: client.city || "",
+        clientZip: client.zip || "",
       }));
     }
   };
@@ -481,7 +537,7 @@ export default function page({
     setIsSaving(true);
     const success = await handleSave();
     if (success) {
-      alert(mode === "create" ? "Invoice Saved!" : "Invoice Updated!");
+      toast.success(mode === "create" ? "Invoice Saved!" : "Invoice Updated!");
     }
     setIsSaving(false);
   };
@@ -512,9 +568,19 @@ export default function page({
     }
   };
   const isAnyActionProcessing = isSaving || isEmailing || isDeleting;
-  
+  if (loading) {
+    return (
+      <LoadingComponent
+        text={
+          mode === "create"
+            ? "Preparing your invoice workspace..."
+            : "Loading invoice details..."
+        }
+      />
+    );
+  }
   return (
-    <div className="w-full py-10 px-6 bg-slate-50 min-h-screen overflow-y-auto">
+    <div className="w-full py-10 px-6 bg-[var(--background)] min-h-screen overflow-y-auto">
       <div className="mx-auto max-w-6xl py-12 justify-center flex flex-wrap lg:flex-nowrap gap-6">
         <InvoiceForm
           currentColor={currentColor}
@@ -522,8 +588,11 @@ export default function page({
           handleItemChange={handleItemChange}
           handleLogoUpload={handleLogoUpload}
           invoice={invoice}
+          isLoggedIn={isLoggedIn}
           invoiceRef={invoiceRef}
           logoPreview={logoPreview}
+          clients={clients}
+          handleClientSelect={handleClientSelect}
           selectedCurrency={selectedCurrency}
           setInvoice={setInvoice}
           totals={totals}
@@ -531,9 +600,9 @@ export default function page({
           tapToPayRef={tapToPayRef}
         />
         <InvoiceSettings
-          clients={clients}
+          // clients={clients}
+          // handleClientSelect={handleClientSelect}
           currentColor={currentColor}
-          handleClientSelect={handleClientSelect}
           handleDelete={handleDelete}
           handleDownloadPDF={handleDownloadPDF}
           handleEmailClick={handleEmailClick}
