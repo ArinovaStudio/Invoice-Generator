@@ -126,13 +126,6 @@ export default function InvoiceLayout({
       tableAmountLabel: "Amount",
 
       items: [{ description: "", quantity: 1, rate: 0, taxRate: 0 }],
-
-      notesTitle: "Notes",
-      notes: "It was great doing business with you.",
-      termsTitle: "Terms & Conditions",
-      terms: "Please make the payment by the due date.",
-      paymentUpiId: "",
-      includeQrCode: false,
     };
   });
 
@@ -144,11 +137,7 @@ export default function InvoiceLayout({
           fetch("/api/user/payment"),
           fetch("/api/user/clients"),
         ]);
-        console.log("testee");
-
         if (profileRes.ok) {
-          console.log(profileRes, "profileecaw");
-
           setIsLoggedIn(true);
           const profileData = await profileRes.json();
           const user = profileData.profile || {};
@@ -193,11 +182,6 @@ export default function InvoiceLayout({
     fetchDefaults();
   }, [mode]);
 
-  // const handleDownloadPDF = useReactToPrint({
-  //   contentRef: invoiceRef,
-  //   documentTitle: invoice.invoiceNumber,
-  //   pageStyle: `@page { size: A4 portrait; margin: 10mm; } @media print { body { background-color: white !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; } }`,
-  // });
 
   const handleDownloadPDF = async () => {
     if (!invoiceRef.current) return;

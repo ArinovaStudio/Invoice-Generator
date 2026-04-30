@@ -165,7 +165,7 @@ export default function InvoiceSettings({
                 Payment Options
               </p>
 
-              {isLoggedIn ? (
+              {!isLoggedIn ? (
                 hasSavedUpi ? (
                   <label className="flex items-center gap-2 rounded-lg border border-gray-100 bg-gray-50 p-3 text-sm text-gray-600 transition-colors hover:bg-gray-100">
                     <input

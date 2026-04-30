@@ -5,6 +5,8 @@ import { useRouter } from "next/navigation";
 import React, { useEffect, useRef, useState } from "react";
 import InvoiceForm from "./InvoiceForm";
 import InvoiceSettings from "./InvoiceSettings";
+import { getUser } from "@/lib/auth";
+import { useSession } from "next-auth/react";
 export interface InvoiceLayoutProps {
   initialData?: any;
   mode?: "create" | "update";
@@ -93,16 +95,17 @@ export default function page({
   });
   const [pdfMode, setPdfMode] = useState(false);
   const tapToPayRef = useRef(null);
-  useEffect(() => {
-    const fetchDefaults = async () => {
+  
+
+  const {data: session, status} = useSession()
+
+      const fetchDefaults = async () => {
       try {
         const [profileRes, paymentRes, clientsRes] = await Promise.all([
           fetch("/api/user/profile"),
           fetch("/api/user/payment"),
           fetch("/api/user/clients"),
         ]);
-        console.log("testee");
-
         if (profileRes.ok) {
           setIsLoggedIn(true);
           const profileData = await profileRes.json();
@@ -144,8 +147,12 @@ export default function page({
         setLoading(false);
       }
     };
-    fetchDefaults();
-  }, [mode]);
+
+  useEffect(() => {
+    if (session) {
+      fetchDefaults();
+    }
+  }, [mode, status]);
 
   // const handleDownloadPDF = useReactToPrint({
   //   contentRef: invoiceRef,

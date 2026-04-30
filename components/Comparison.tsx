@@ -69,17 +69,17 @@ const Comparison = () => {
         });
 
         // Highlight sweep over the Arinvoice column cells
-        gsap.fromTo(
-          ".cmp-a-cell",
-          { backgroundColor: "hsl(var(--primary) / 0)" },
-          {
-            backgroundColor: "hsl(var(--primary) / 0.08)",
-            duration: 0.5,
-            stagger: 0.07,
-            ease: "power2.out",
-            scrollTrigger: { trigger: ".cmp-table", start: "top 70%" },
-          }
-        );
+        // gsap.fromTo(
+        //   ".cmp-a-cell",
+        //   { backgroundColor: "hsl(var(--primary) / 0)" },
+        //   {
+        //     backgroundColor: "hsl(var(--primary) / 0.08)",
+        //     duration: 0.5,
+        //     stagger: 0.07,
+        //     ease: "power2.out",
+        //     scrollTrigger: { trigger: ".cmp-table", start: "top 70%" },
+        //   }
+        // );
 
         // Pop each check/cross icon
         gsap.from(".cmp-row .cmp-icon", {

@@ -8,6 +8,7 @@ import { QRCodeSVG } from "qrcode.react";
 import { RefObject, useState } from "react";
 import validator from "validator";
 import { InlineInput, InlineTextarea } from "./InlineComponents";
+import { handleKeyDown } from "@/lib/InputKeyDown";
 
 interface Props {
   invoiceRef: RefObject<HTMLDivElement | null>;
@@ -235,8 +236,9 @@ export default function InvoiceForm({
                   <InlineInput
                     name="senderZip"
                     placeholder="Your ZIP / Postal Code"
-                    value={invoice.senderZip}
+                    value={invoice.senderZip?.slice(0, 6)}
                     onChange={handleChange}
+                    onKeyDownCapture={handleKeyDown}
                     onBlur={() => {
                       if (!invoice.senderZip || !invoice.senderCountry) {
                         setSenderZipError("");
@@ -409,7 +411,8 @@ export default function InvoiceForm({
                 <div>
                   <InlineInput
                     name="clientZip"
-                    value={invoice.clientZip}
+                    value={invoice.clientZip?.slice(0, 6)}
+                    onKeyDownCapture={handleKeyDown}
                     onChange={handleChange}
                     placeholder="ZIP / Postal Code"
                     className={cn(
@@ -490,13 +493,13 @@ export default function InvoiceForm({
             </div>
           </div>
           {(!pdfMode || invoice.clientState) && (
-            <div className="space-y-1 flex gap-2 items-center max-w-sm">
+            <div className="space-y-1 flex gap-2 items-center justify-center max-w-sm">
               <p className="text-xs whitespace-nowrap font-medium uppercase tracking-wide text-gray-500">
                 Place of Supply
               </p>
 
               {pdfMode ? (
-                <div className="w-full rounded px-1 text-gray-700">
+                <div className="w-full rounded  px-1 text-gray-700">
                   {
                     State.getStatesOfCountry(invoice.clientCountry).find(
                       (state) => state.isoCode === invoice.clientState
@@ -510,7 +513,7 @@ export default function InvoiceForm({
                   onChange={handleChange}
                   disabled={!invoice.clientCountry}
                   className={cn(
-                    "w-full rounded bg-transparent px-1 text-gray-700 hover:bg-slate-50 focus:bg-blue-50 focus:outline-none focus:ring-1 focus:ring-blue-500/50 disabled:opacity-50",
+                    "w-full text-sm rounded bg-transparent px-1 text-gray-700 hover:bg-slate-50 focus:bg-blue-50 focus:outline-none focus:ring-1 focus:ring-blue-500/50 disabled:opacity-50",
                     "pr-6"
                   )}
                 >
@@ -533,7 +536,7 @@ export default function InvoiceForm({
               className={`grid grid-cols-13 items-center px-4 py-2 text-sm font-medium text-white ${currentColor.color}`}
             >
               {/* Description */}
-              <div className="col-span-5 pr-2">
+              <div className="col-span-4 pr-2">
                 <input
                   name="tableDescLabel"
                   value={invoice.tableDescLabel}
@@ -544,15 +547,15 @@ export default function InvoiceForm({
               </div>
 
               {/* Qty */}
-              <div className="col-span-1 text-center">
+              <div className="col-span-1 text-right">
                 <input
                   name="tableQtyLabel"
                   value={invoice.tableQtyLabel}
                   onChange={handleChange}
                   placeholder="Qty"
                   className={cn(
-                    "bg-transparent hover:bg-white/20 focus:bg-white/20 focus:outline-none rounded px-1 w-full text-center placeholder-white/70",
-                    pdfMode ? "text-center!" : ""
+                    "bg-transparent hover:bg-white/20 focus:bg-white/20 focus:outline-none rounded px-1 w-full text-right placeholder-white/70",
+                    pdfMode ? "text-right!" : ""
                   )}
                 />
               </div>
@@ -566,35 +569,35 @@ export default function InvoiceForm({
                   placeholder="Rate"
                   className={cn(
                     "bg-transparent hover:bg-white/20 focus:bg-white/20 focus:outline-none rounded px-1 w-full text-right placeholder-white/70",
-                    pdfMode ? "text-center!" : ""
+                    pdfMode ? "text-right!" : ""
                   )}
                 />
               </div>
 
               {/* Tax */}
-              <div className="col-span-2 text-center">
+              <div className="col-span-2 text-right">
                 <input
                   name="tableTaxLabel"
                   value={invoice.tableTaxLabel}
                   onChange={handleChange}
                   placeholder="Tax %"
                   className={cn(
-                    "bg-transparent hover:bg-white/20 focus:bg-white/20 focus:outline-none rounded px-1 w-full text-center placeholder-white/70",
-                    pdfMode ? "text-center!" : ""
+                    "bg-transparent hover:bg-white/20 focus:bg-white/20 focus:outline-none rounded px-1 w-full text-right placeholder-white/70",
+                    pdfMode ? "text-right!" : ""
                   )}
                 />
               </div>
 
               {/* HSN */}
-              <div className="col-span-1 text-center px-1">
+              <div className="col-span-2 text-right px-1">
                 <input
                   name="tableHsnLabel"
                   value={invoice.tableHsnLabel}
                   onChange={handleChange}
                   placeholder="HSN"
                   className={cn(
-                    "bg-transparent hover:bg-white/20 focus:bg-white/20 focus:outline-none rounded px-1 w-full text-center placeholder-white/70",
-                    pdfMode ? "text-center!" : ""
+                    "bg-transparent hover:bg-white/20 focus:bg-white/20 focus:outline-none rounded px-1 w-full text-right placeholder-white/70",
+                    pdfMode ? "text-right!" : ""
                   )}
                 />
               </div>
@@ -621,7 +624,7 @@ export default function InvoiceForm({
                   key={i}
                   className="grid grid-cols-13 items-start border-t px-4 py-2 text-sm group"
                 >
-                  <div className="col-span-5 pr-2">
+                  <div className="col-span-4 pr-2">
                     <InlineTextarea
                       rows={2}
                       className={cn("resize-y!", pdfMode ? "resize-none!" : "")}
@@ -635,21 +638,24 @@ export default function InvoiceForm({
 
                   <div className="col-span-1 px-1">
                     <InlineInput
-                      type="number"
+                      type="text"
+                      
+                      onKeyDownCapture={handleKeyDown}
                       value={item.quantity}
                       onChange={(e: any) =>
                         handleItemChange(i, "quantity", Number(e.target.value))
                       }
                       className={cn(
                         "text-right!",
-                        pdfMode ? "appearance-none" : ""
+                        pdfMode ? "appearance-none resize-none" : ""
                       )}
                     />
                   </div>
 
                   <div className={cn("col-span-2 px-1")}>
                     <InlineInput
-                      type="number"
+                      type="text"
+                      onKeyDownCapture={handleKeyDown}
                       value={item.rate}
                       onChange={(e: any) =>
                         handleItemChange(i, "rate", Number(e.target.value))
@@ -663,7 +669,8 @@ export default function InvoiceForm({
 
                   <div className={cn("col-span-2 px-1")}>
                     <InlineInput
-                      type="number"
+                      type="text"
+                      onKeyDownCapture={handleKeyDown}
                       value={item.taxRate}
                       onChange={(e: any) =>
                         handleItemChange(i, "taxRate", Number(e.target.value))
@@ -675,9 +682,9 @@ export default function InvoiceForm({
                     />
                   </div>
 
-                  <div className="col-span-1 px-1">
+                  <div className="col-span-2 px-1">
                     <InlineInput
-                      value={item.hsn}
+                      value={item.hsn?.slice(0, 8)}
                       onChange={(e: any) =>
                         handleItemChange(i, "hsn", e.target.value)
                       }
@@ -785,11 +792,11 @@ export default function InvoiceForm({
               {(!pdfMode || (invoice.includeQrCode && invoice.paymentUpiId)) &&
                 invoice.includeQrCode &&
                 invoice.paymentUpiId && (
-                  <div className="mt-6 flex justify-end">
-                    <div className=" rounded-2xl p-4 pb-2 bg-white">
+                  <div className="mt-6 flex items-end justify-end">
+                    <div className=" rounded-2xl pb-2 bg-white">
                       {/* Top Row */}
-                      <div className="flex items-center justify-between mb-3">
-                        <p className="text-gray-400 font-normal text-sm uppercase w-full text-center">
+                      <div className="flex items-end justify-between mb-2">
+                        <p className="text-gray-400 font-bold text-sm uppercase w-full text-center">
                           Scan to Pay
                         </p>
                       </div>
@@ -809,7 +816,7 @@ export default function InvoiceForm({
                             level="H"
                           />
                         </div>
-                        <p className="text-gray-500 break-all font-mono text-xs text-center mb-3">
+                        <p className="text-gray-500 break-all font-mono text-[0.6rem] text-center mb-3">
                           {invoice.paymentUpiId}
                         </p>
                         <button
@@ -844,7 +851,6 @@ export default function InvoiceForm({
                           }}
                           className="
                           bg-orange-500
-                          hover:bg-orange-600
                           text-white
                           text-sm
                           font-medium
@@ -856,11 +862,7 @@ export default function InvoiceForm({
                           border-orange-400
                           transition-all
                           duration-300
-                          whitespace-nowrap
-                          shadow-[6px_6px_12px_rgba(180,120,40,0.25),-6px_-6px_12px_rgba(255,255,255,0.9)]
-                          active:shadow-[inset_4px_4px_12px_rgba(180,120,40,0.25),inset_-4px_-4px_12px_rgba(255,255,255,0.8)]
-                          active:text-orange-100
-  "
+                          whitespace-nowrap"
                         >
                           Tap to Pay
                         </button>

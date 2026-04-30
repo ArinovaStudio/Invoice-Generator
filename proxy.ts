@@ -1,9 +1,12 @@
 // middleware.ts
 import { NextRequest, NextResponse } from "next/server";
-import { getUser } from "./lib/auth";
-export default async function proxy(req: NextRequest) {
+import { getToken } from "next-auth/jwt";
+
+export default async function middleware(req: NextRequest) {
+  const token = await getToken({ req });
+  const isLoggedIn = !!token;
+
   const { nextUrl } = req;
-  const isLoggedIn = !!(await getUser()).user;
   const isProtectedRoute = nextUrl.pathname.startsWith("/user");
   const isAuthRoute =
     nextUrl.pathname.startsWith("/login") ||
@@ -18,8 +21,8 @@ export default async function proxy(req: NextRequest) {
   }
 
   return NextResponse.next();
-};
+}
 
 export const config = {
-  matcher: ["/user/:path*", "/login", "/register"],
+  matcher: ["/user/:path*", "/login", "/register", "/invoice"],
 };

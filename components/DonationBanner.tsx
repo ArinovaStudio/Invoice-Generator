@@ -115,7 +115,7 @@ const DonationBanner = () => {
             <div className="absolute -top-32 -left-32 w-[28rem] h-[28rem] rounded-full bg-primary/15 blur-3xl pointer-events-none" />
             <div className="absolute -bottom-32 -right-32 w-[28rem] h-[28rem] rounded-full bg-primary/10 blur-3xl pointer-events-none" />
 
-            <div className="relative grid lg:grid-cols-[1.15fr,1fr] gap-10 lg:gap-12 px-6 sm:px-10 lg:px-16 pt-20 sm:pt-24 pb-10 sm:pb-14">
+            <div className="relative flex justify-between items-center px-6 sm:px-10 lg:px-16 pt-20 sm:pt-24 pb-10 sm:pb-14">
               {/* LEFT — Editorial copy */}
               <div className="relative z-10">
                 <h3 className="font-display text-[clamp(2.5rem,8vw,5.5rem)] leading-[0.92] tracking-tight">
@@ -154,7 +154,7 @@ const DonationBanner = () => {
               </div>
 
               {/* RIGHT — Jar + amount picker */}
-              <div className="relative z-10 flex flex-col">
+              <div className="relative z-10 flex flex-col w-1/2">
                 {/* Jar visual */}
                 <div className="relative h-56 sm:h-72 lg:h-80 mb-6 sm:mb-8">
                   {/* Pedestal ring */}
