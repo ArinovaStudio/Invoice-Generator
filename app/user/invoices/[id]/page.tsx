@@ -8,27 +8,31 @@ import { useEffect, useState } from "react";
 export default function UpdateInvoicePage() {
   const { id } = useParams();
   const [data, setData] = useState(null);
-
+  const [loading,setLoading] = useState<boolean>(true);
   useEffect(() => {
     if (!id) return;
-    
-    fetch(`/api/user/invoices/${id}`)
-      .then((res) => res.json())
-      .then((json) => {
-        if (json.success && json.invoice) {
-          const raw = json.invoice;
-          
+    const fetchData = async () => {
+      try{
+        setLoading(true);
+      const req = await fetch(`/api/user/invoices/${id}`);
+      const res = await req.json();
+      if(res.success){
+        const raw = res.invoice;
           const formattedData = {
             ...raw,
             issueDate: raw.issueDate ? raw.issueDate.split("T")[0] : "",
             dueDate: raw.dueDate ? raw.dueDate.split("T")[0] : "",
             logoUrl: raw.senderLogoUrl || null,
           };
-          
           setData(formattedData);
-        }
-      })
-      .catch((err) => console.error("Error fetching invoice:", err));
+      }
+    }catch(error: any){
+      
+    }finally{
+      setLoading(false);
+    }
+    };
+    fetchData();
   }, [id]);
 
   // if (!data) {
@@ -40,5 +44,5 @@ export default function UpdateInvoicePage() {
   //   );
   // }
 
-  return <InvoiceLayout mode="update" initialData={data} invoiceId={id as string} />;
+  return <InvoiceLayout loading={loading} mode="update" initialData={data} invoiceId={id as string} />;
 }

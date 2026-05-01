@@ -8,13 +8,52 @@ import InvoiceSettings from "./InvoiceSettings";
 import { useSession } from "next-auth/react";
 import { toast } from "sonner";
 import LoadingComponent from "../LoadingComponent";
+import type { Invoice } from "./invoice";
 export interface InvoiceLayoutProps {
+  loading?: boolean;
   initialData?: any;
   mode?: "create" | "update";
   invoiceId?: string;
 }
+const defaultInvoice = {
+  title: "INVOICE",
+  senderCompany: "",
+  senderName: "",
+  senderAddress: "",
+  senderCityZip: "",
+  senderCountry: "IN",
+  clientId: "",
+  clientCompany: "",
+  clientName: "",
+  clientAddress: "",
+  clientCity: "",
+  clientState: "",
+  clientZip: "",
+  clientCountry: "IN",
+  paymentMethod: "upi",
+  invoiceNumber: `INV-${Date.now().toString().slice(-6)}`,
+  issueDate: new Date().toISOString().split("T")[0],
+  dueDate: new Date(Date.now() + 15 * 86400000).toISOString().split("T")[0],
+
+  tableDescLabel: "Item Description",
+  tableHsnLabel: "HSN",
+  tableQtyLabel: "Qty",
+  tableRateLabel: "Rate",
+  tableTaxLabel: "Tax %",
+  tableAmountLabel: "Amount",
+
+  items: [{ description: "", quantity: 1, rate: 0, taxRate: 0, hsn: "" }],
+
+  notesTitle: "Notes",
+  notes: "It was great doing business with you.",
+  termsTitle: "Terms And Conditions",
+  terms: "Terms Content Will Go Here...",
+  paymentUpiId: "",
+  includeQrCode: false,
+};
 
 export default function page({
+  loading: initialLoading = false,
   initialData,
   mode = "create",
   invoiceId,
@@ -35,67 +74,34 @@ export default function page({
 
   const [clients, setClients] = useState<any[]>([]);
   const [logoPreview, setLogoPreview] = useState<string | null>(
-    initialData?.senderLogoUrl || null
+    initialData?.logoUrl || null
   );
   const [logoFile, setLogoFile] = useState<File | null>(null);
 
-  const [invoice, setInvoice] = useState(() => {
-    if (initialData) {
-      return {
-        ...initialData,
-        clientId: initialData.clientId || "",
-        tableDescLabel: initialData.tableDescLabel || "Item Description",
-        tableQtyLabel: initialData.tableQtyLabel || "Qty",
-        tableRateLabel: initialData.tableRateLabel || "Rate",
-        tableTaxLabel: initialData.tableTaxLabel || "Tax %",
-        tableHsnLabel: initialData.tableHsnLabel || "HSN",
-        tableAmountLabel: initialData.tableAmountLabel || "Amount",
-        items: initialData.items?.length
-          ? initialData.items
-          : [{ description: "", quantity: 1, rate: 0, taxRate: 0 }],
-      };
-    }
+  const [invoice, setInvoice] = useState<any>(defaultInvoice);
 
-    return {
-      title: "INVOICE",
-      senderCompany: "",
-      senderName: "",
-      senderAddress: "",
-      senderCityZip: "",
-      senderCountry: "IN",
-      clientId: "",
-      clientCompany: "",
-      clientName: "",
-      clientAddress: "",
-      clientCity: "",
-      clientState: "",
-      paymentMethod: "upi",
-      clientZip: "",
-      clientCountry: "IN",
-      invoiceNumber: `INV-${Date.now().toString().slice(-6)}`,
-      issueDate: new Date().toISOString().split("T")[0],
-      dueDate: new Date(Date.now() + 15 * 86400000).toISOString().split("T")[0],
-
-      tableDescLabel: "Item Description",
-      tableHsnLabel: "HSN",
-      tableQtyLabel: "Qty",
-      tableRateLabel: "Rate",
-      tableTaxLabel: "Tax %",
-      tableAmountLabel: "Amount",
-
-      items: [{ description: "", quantity: 1, rate: 0, taxRate: 0 }],
-
-      notesTitle: "Notes",
-      notes: "It was great doing business with you.",
-      termsTitle: "Terms And Conditions",
-      terms: "Terms Content Will Go Here...",
-      paymentUpiId: "",
-      includeQrCode: false,
-    };
-  });
   const [pdfMode, setPdfMode] = useState(false);
   const tapToPayRef = useRef(null);
 
+  useEffect(() => {
+    if (!initialData) return;
+    setInvoice({
+      ...defaultInvoice,
+      ...initialData,
+      clientId: initialData.clientId || "",
+      senderCompany: initialData.senderCompany || "",
+      tableDescLabel: initialData.tableDescLabel || "Item Description",
+      tableQtyLabel: initialData.tableQtyLabel || "Qty",
+      tableRateLabel: initialData.tableRateLabel || "Rate",
+      tableTaxLabel: initialData.tableTaxLabel || "Tax %",
+      tableHsnLabel: initialData.tableHsnLabel || "HSN",
+      tableAmountLabel: initialData.tableAmountLabel || "Amount",
+      items: initialData.items?.length
+        ? initialData.items
+        : defaultInvoice.items,
+    });
+    setLogoPreview(initialData?.logoUrl || null);
+  }, [initialData]);
   const { data: session, status } = useSession();
 
   const fetchDefaults = async () => {
@@ -160,7 +166,6 @@ export default function page({
       fetchDefaults();
     }
   }, [mode, status]);
-
 
   const handleDownloadPDF = async () => {
     if (!invoiceRef.current) return;
@@ -296,8 +301,8 @@ export default function page({
           pdf.setPage(targetPage);
 
           // const upiLink = `upi://pay?pa=${invoice.paymentUpiId}&pn=${invoice.senderCompany}&am=${totals.total}&cu=INR&tn=${`Payment of ${invoice.senderCompany}`}`;
-          const location = process.env.NEXT_PUBLIC_URL
-          const upiLink = `${location}/pay?pa=${invoice.paymentUpiId}&pn=${invoice.senderCompany}&am=${totals.total}&tn=Payment%20of%20${invoice.senderCompany}`
+          const location = process.env.NEXT_PUBLIC_URL;
+          const upiLink = `${location}/pay?pa=${invoice.paymentUpiId}&pn=${invoice.senderCompany}&am=${totals.total}&tn=Payment%20of%20${invoice.senderCompany}`;
 
           pdf.link(pdfX, pdfY, pdfW, pdfH, { url: upiLink });
         }
@@ -311,19 +316,18 @@ export default function page({
     }
   };
 
-
   const handleChange = (
     e: React.ChangeEvent<
       HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
     >
   ) => {
     const { name, value } = e.target;
-    if (name.startsWith("client")) {
-      // If user types manually, unlink the saved clientId
-      setInvoice((prev: any) => ({ ...prev, [name]: value, clientId: "" }));
-    } else {
-      setInvoice((prev: any) => ({ ...prev, [name]: value }));
-    }
+    // if (name.startsWith("client")) {
+    //   // If user types manually, unlink the saved clientId
+    //   setInvoice((prev: any) => ({ ...prev, [name]: value }));
+    // } else {
+    setInvoice((prev: any) => ({ ...prev, [name]: value }));
+    // }
   };
 
   const handleClientSelect = (e: React.ChangeEvent<HTMLSelectElement>) => {
@@ -382,7 +386,7 @@ export default function page({
     }
   };
 
-  const totals = invoice.items.reduce(
+  const totals = invoice?.items?.reduce(
     (acc: any, item: any) => {
       const itemBase = item.quantity * item.rate;
       const itemTax = itemBase * ((item.taxRate || 0) / 100);
@@ -418,14 +422,14 @@ export default function page({
 
       if (!res.ok) {
         const errorData = await res.json();
-        toast.error(errorData.message)
+        toast.error(errorData.message);
         throw new Error(errorData.message || "Failed to save");
       }
 
       return true;
     } catch (error: any) {
       console.error(error);
-      toast.error(error.message as any)
+      toast.error(error.message as any);
       return false;
     }
   };
@@ -558,7 +562,7 @@ export default function page({
     }
   };
   const isAnyActionProcessing = isSaving || isEmailing || isDeleting;
-  if (loading) {
+  if (loading || initialLoading) {
     return (
       <LoadingComponent
         text={

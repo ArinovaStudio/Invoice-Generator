@@ -37,7 +37,6 @@ const Navbar = () => {
       ? "mt-2 inline-flex items-center justify-center gap-2 px-5 py-3 rounded-full bg-foreground text-background text-sm font-semibold hover:bg-primary transition-colors"
       : "hidden sm:inline-flex items-center gap-2 px-4 sm:px-5 py-2 sm:py-2.5 rounded-full bg-foreground text-background text-xs sm:text-sm font-semibold hover:bg-primary transition-colors";
 
-    if (pathname === "/invoice") {
       if (status === "authenticated") {
         return (
           <Link href="/user" onClick={() => setOpen(false)} className={baseClasses}>
@@ -48,7 +47,8 @@ const Navbar = () => {
           </Link>
         );
       }
-      return (
+      else if(status === "unauthenticated" && pathname!=="/"){
+        return (
         <Link href="/login" onClick={() => setOpen(false)} className={baseClasses}>
           Login
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
@@ -57,7 +57,6 @@ const Navbar = () => {
         </Link>
       );
     }
-
     return (
       <Link href="/invoice" onClick={() => setOpen(false)} className={baseClasses}>
         Get started
