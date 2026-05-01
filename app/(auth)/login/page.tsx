@@ -103,7 +103,7 @@ export default function LoginPage() {
 
           <button 
             disabled={isLoading || isGoogleLoading}
-            className="w-full flex items-center justify-center h-11 bg-[#FF4F33] hover:bg-[#E6472E] text-white font-bold rounded-lg transition-all shadow-md shadow-orange-500/20 disabled:opacity-70 disabled:cursor-not-allowed"
+            className="w-full flex text-sm items-center justify-center h-11 bg-[#FF4F33] hover:bg-[#E6472E] text-white font-bold rounded-lg transition-all shadow-md shadow-orange-500/20 disabled:opacity-70 disabled:cursor-not-allowed"
           >
             {isLoading ? <Loader2 className="w-5 h-5 animate-spin" /> : "Sign in"}
           </button>

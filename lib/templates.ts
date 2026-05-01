@@ -1,7 +1,8 @@
+const PUBLIC_URL = process.env.NEXT_PUBLIC_URL!;
 export const otpTemplate = (
   otp: string, 
   type: "VERIFY_EMAIL" | "RESET_PASSWORD" = "VERIFY_EMAIL",
-  baseUrl: string
+  baseUrl: string = PUBLIC_URL
 ) => {
   const title = type === "RESET_PASSWORD" ? "Reset your password" : "Verify your email address";
   const message = type === "RESET_PASSWORD" 
