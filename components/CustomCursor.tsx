@@ -23,7 +23,7 @@ const CustomCursor = () => {
       if (!dot || !ring) return;
 
       gsap.set([dot, ring], { xPercent: -50, yPercent: -50, opacity: 0 });
-
+      console.log("hello!")
       const xTo = gsap.quickTo(ring, "x", { duration: 0.5, ease: "power3" });
       const yTo = gsap.quickTo(ring, "y", { duration: 0.5, ease: "power3" });
       const dxTo = gsap.quickTo(dot, "x", { duration: 0.15, ease: "power3" });

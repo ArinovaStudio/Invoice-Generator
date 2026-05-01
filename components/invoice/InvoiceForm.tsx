@@ -5,7 +5,7 @@ import { cn } from "@/lib/utils";
 import { City, Country, State } from "country-state-city";
 import { Plus, Trash2 } from "lucide-react";
 import { QRCodeSVG } from "qrcode.react";
-import { RefObject, useEffect, useState } from "react";
+import { RefObject, useEffect, useRef, useState } from "react";
 import validator from "validator";
 import { InlineInput, InlineTextarea } from "./InlineComponents";
 import { handleKeyDown } from "@/lib/InputKeyDown";
@@ -84,19 +84,25 @@ export default function InvoiceForm({
       items: prev.items.filter((_: any, i: number) => i !== index),
     }));
   };
+  
+  // const clientRef = useRef(null)
+  // const senderRef = useRef(null)
 
-  const resizeTextarea = (e: any) => {
-    const el = e.target;
-    if (!el) return;
-    el.style.height = "auto";
-    el.style.height = el.scrollHeight + "px";
-  };
+const resizeTextarea = (el: HTMLTextAreaElement | null) => {
+  if (!el) return;
+  el.style.height = "auto";
+  el.style.height = el.scrollHeight + "px";
+};
 
-  useEffect(() => {
-    const textareas = document.querySelectorAll(".auto-resize");
+useEffect(() => {
+  const textareas = document.querySelectorAll(
+    ".auto-resize"
+  ) as NodeListOf<HTMLTextAreaElement>;
 
-    textareas.forEach(resizeTextarea);
-  }, [invoice?.senderAddress, invoice?.clientAddress]);
+  textareas.forEach((el) => resizeTextarea(el));
+}, [invoice?.senderAddress, invoice?.clientAddress, ]);
+
+
   return (
     <div className="flex-2 w-full lg:max-w-3xl">
       <Card
@@ -175,7 +181,7 @@ export default function InvoiceForm({
                   placeholder="Company's Address"
                   value={invoice.senderAddress}
                   onChange={(e: any) => {
-                    handleChange(e), resizeTextarea(e);
+                    handleChange(e), resizeTextarea(e.target);
                   }}
                   className="text-sm auto-resize"
                 />
@@ -356,7 +362,7 @@ export default function InvoiceForm({
                   name="clientAddress"
                   value={invoice.clientAddress}
                   onChange={(e: any) => {
-                    handleChange(e), resizeTextarea(e);
+                    handleChange(e), resizeTextarea(e.target);
                   }}
                   placeholder="Client Address"
                   className="text-sm resize-none auto-resize"
@@ -657,12 +663,12 @@ export default function InvoiceForm({
                       className={cn(
                         "resize-y!",
                         pdfMode ? "resize-none!" : "",
-                        "text-sm leading-snug"
+                        "text-sm leading-snug auto-resize"
                       )}
                       value={item.description}
                       onChange={(e: any) => {
                         handleItemChange(i, "description", e.target.value);
-                        resizeTextarea(e);
+                        resizeTextarea(e.target);
                       }}
                       placeholder="Description"
                     />
@@ -838,7 +844,7 @@ export default function InvoiceForm({
                       <div className="bg-white p-1 rounded-md">
                         <QRCodeSVG
                           value={`upi://pay?pa=${invoice.paymentUpiId}&pn=${invoice.senderCompany}&am=${totals.total}&cu=${selectedCurrency.code}&tn=Payment of ${invoice.senderCompany}`}
-                          size={140}
+                          size={160}
                           level="H"
                         />
                       </div>
@@ -873,7 +879,8 @@ export default function InvoiceForm({
       font-medium
       px-3
       py-1.5
-      rounded-md
+      rounded-full
+      mt-2
       border
       border-orange-400
       whitespace-nowrap
