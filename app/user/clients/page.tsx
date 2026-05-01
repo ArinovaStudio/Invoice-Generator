@@ -164,7 +164,7 @@ export default function ClientsPage() {
   }
   return (
     <div className="flex-1 overflow-y-auto p-8 lg:p-12 bg-[hsl(var(--background))]">
-      <div className="max-w-6xl mx-auto">
+      <div className="w-full mx-auto">
         {/* Header */}
         <div className="flex flex-col md:flex-row md:items-end justify-between mb-7 gap-4">
           <div>
@@ -201,7 +201,7 @@ export default function ClientsPage() {
         </div>
 
         {/* Table */}
-        <div className="bg-[hsl(var(--card))] rounded-xl border border-[hsl(var(--border))] overflow-hidden">
+        <div className="bg-[hsl(var(--card))] rounded-sm border border-[hsl(var(--border))] overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full text-left">
               <thead>
@@ -214,6 +214,9 @@ export default function ClientsPage() {
                   </th>
                   <th className="px-6 py-3 text-[11px] uppercase tracking-wider font-semibold text-[hsl(var(--muted-foreground))]">
                     Location
+                  </th>
+                                    <th className="px-6 py-3 text-[11px] uppercase tracking-wider font-semibold text-[hsl(var(--muted-foreground))]">
+                    COMPANY GST
                   </th>
                   <th className="px-6 py-3 text-[11px] uppercase tracking-wider font-semibold text-right text-[hsl(var(--muted-foreground))]">
                     Actions
@@ -260,8 +263,12 @@ export default function ClientsPage() {
 
                       <td className="px-6 py-4 text-[13px] text-[hsl(var(--muted-foreground))]">
                         {client.city
-                          ? `${client.city}, ${client.country}`
+                          ? `${client.city}, ${client.state}, ${client.country}`
                           : client.country}
+                      </td>
+
+                      <td className="px-6 py-4 text-[13px] text-[hsl(var(--muted-foreground))]">
+                        {client.companyGstin || "—"}
                       </td>
 
                       <td className="px-6 py-4 text-right">
@@ -270,7 +277,7 @@ export default function ClientsPage() {
                             onClick={() => openForm(client)}
                             className="h-8 w-8 rounded-md bg-[hsl(var(--muted)/0.6)] text-[hsl(var(--muted-foreground))] hover:bg-[hsl(var(--accent))] hover:text-[hsl(var(--primary))] flex items-center justify-center transition"
                           >
-                            <span className="material-symbols-outlined text-[18px]">
+                            <span className="material-symbols-outlined text-xs">
                               edit
                             </span>
                           </button>
@@ -285,7 +292,7 @@ export default function ClientsPage() {
                             }
                             className="h-8 w-8 rounded-md bg-[hsl(var(--muted)/0.6)] text-[hsl(var(--muted-foreground))] hover:bg-[hsl(var(--destructive)/0.12)] hover:text-[hsl(var(--destructive))] flex items-center justify-center transition"
                           >
-                            <span className="material-symbols-outlined text-[18px]">
+                            <span className="material-symbols-outlined text-xs">
                               delete
                             </span>
                           </button>
@@ -341,9 +348,9 @@ export default function ClientsPage() {
 
                 {/* Client Name */}
                 <div>
-                  <label className={labelStyles}>Client Name *</label>
+                  <label className={labelStyles}>Client Name</label>
                   <input
-                    required
+                    // required
                     name="name"
                     value={formData.name}
                     onChange={handleChange}
@@ -354,9 +361,9 @@ export default function ClientsPage() {
 
                 {/* Email */}
                 <div className="sm:col-span-2">
-                  <label className={labelStyles}>Contact Email *</label>
+                  <label className={labelStyles}>Contact Email</label>
                   <input
-                    required
+                    // required
                     type="email"
                     name="email"
                     value={formData.email}

@@ -10,7 +10,7 @@ export default function Header({
 }) {
   const { data: session } = useSession();
 
-  const userName = session?.user?.name || "Not Valid";
+  const userName = session?.user?.name || "User";
   const firstLetter = userName.charAt(0).toUpperCase();
 
   const hour = new Date().getHours();

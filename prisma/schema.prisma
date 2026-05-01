@@ -7,43 +7,43 @@ datasource db {
 }
 
 model User {
-  id String @id @default(uuid())
-  name String?
-  email String? @unique
-  emailVerified DateTime?
-  password String?
-  image String?
-  companyGstin String?
-  companyName String?
+  id             String    @id @default(uuid())
+  name           String?
+  email          String?   @unique
+  emailVerified  DateTime?
+  password       String?
+  image          String?
+  companyGstin   String?
+  companyName    String?
   companyAddress String?
-  city String?
-  state String?
-  zip String?
-  country String? @default("India")
-  logoUrl String?
+  city           String?
+  state          String?
+  zip            String?
+  country        String?   @default("India")
+  logoUrl        String?
 
-  accounts Account[]
+  accounts       Account[]
   paymentDetails PaymentDetails?
-  clients Client[]
-  invoices Invoice[]
+  clients        Client[]
+  invoices       Invoice[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
 
 model Account {
-  id String @id @default(uuid())
-  userId String
-  type String
-  provider String
+  id                String  @id @default(uuid())
+  userId            String
+  type              String
+  provider          String
   providerAccountId String
-  refresh_token String? @db.Text
-  access_token String? @db.Text
-  expires_at Int?
-  token_type String?
-  scope String?
-  id_token String? @db.Text
-  session_state String?
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
@@ -51,30 +51,29 @@ model Account {
 }
 
 model PaymentDetails {
-  id String @id @default(uuid())
-  userId String @unique
-  upiId String? 
-  bankName String?
-  accountNumber String?
-  ifscCode String?
+  id                String  @id @default(uuid())
+  userId            String  @unique
+  upiId             String?
+  bankName          String?
+  accountNumber     String?
+  ifscCode          String?
   accountHolderName String?
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
-
 model Client {
-  id String @id @default(uuid())
-  userId String
-  email String?
-  name String?
-  companyName String?
-  address String?
+  id           String  @id @default(uuid())
+  userId       String
+  email        String?
+  name         String?
+  companyName  String?
+  address      String?
   companyGstin String?
-  city String?
-  state String?
-  zip String?
-  country String? @default("India")
+  city         String?
+  state        String?
+  zip          String?
+  country      String? @default("India")
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -93,73 +92,74 @@ enum InvoiceStatus {
 }
 
 model Invoice {
-  id String @id @default(uuid())
-  userId String
+  id       String  @id @default(uuid())
+  userId   String
   clientId String?
-  title String @default("INVOICE")
-  
-  paymentUpiId String?
+  title    String  @default("INVOICE")
+
+  paymentUpiId  String?
   includeQrCode Boolean @default(false)
 
-  invoiceNumber String
-  status InvoiceStatus @default(DRAFT) 
-  issueDate DateTime @default(now())
-  dueDate DateTime
-  senderCompany String?
-  senderGSTIN String?
-  senderLogoUrl String?
-  senderName String
-  senderAddress String?
-  senderCity String?
-  senderState String?
-  senderZip String?
-  senderCountry String? @default("IN")
-  clientCompany String?
-  clientGSTIN String?
-  clientName String
-  clientAddress String?
-  clientCity String?
-  clientState String?
-  clientZip String?
-  clientCountry String? @default("IN")
-  subTotal Float
-  taxTotal Float
-  totalAmount Float
-  paymentMethod String?
-  bankName String?
-  accountNumber String?
-  ifscCode String?
-  notesTitle String @default("Notes")
-  notes String? @db.Text
-  termsTitle String @default("Terms & Conditions")
-  terms String? @db.Text
-  tableDescLabel   String @default("Item Description")
-  tableQtyLabel    String @default("Qty")
-  tableRateLabel   String @default("Rate")
-  tableTaxLabel    String @default("Tax %")
-  tableAmountLabel String @default("Amount")
+  invoiceNumber    String
+  status           InvoiceStatus @default(DRAFT)
+  issueDate        DateTime      @default(now())
+  dueDate          DateTime
+  senderCompany    String?
+  senderGSTIN      String?
+  senderLogoUrl    String?
+  senderName       String
+  senderAddress    String?
+  senderCity       String?
+  senderState      String?
+  senderZip        String?
+  senderCountry    String?       @default("IN")
+  clientCompany    String?
+  clientGSTIN      String?
+  clientName       String
+  clientAddress    String?
+  clientCity       String?
+  clientState      String?
+  clientZip        String?
+  clientCountry    String?       @default("IN")
+  subTotal         Float
+  taxTotal         Float
+  totalAmount      Float
+  paymentMethod    String?
+  bankName         String?
+  accountNumber    String?
+  ifscCode         String?
+  notesTitle       String        @default("Notes")
+  notes            String?       @db.Text
+  termsTitle       String        @default("Terms & Conditions")
+  terms            String?       @db.Text
+  tableDescLabel   String        @default("Item Description")
+  tableQtyLabel    String        @default("Qty")
+  tableRateLabel   String        @default("Rate")
+  tableTaxLabel    String        @default("Tax %")
+  tableAmountLabel String        @default("Amount")
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   items InvoiceItem[]
 
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user   User    @relation(fields: [userId], references: [id], onDelete: Cascade)
   client Client? @relation(fields: [clientId], references: [id], onDelete: SetNull)
 
   @@unique([userId, invoiceNumber])
 }
 
 model InvoiceItem {
-  id String @id @default(uuid())
-  invoiceId String
+  id          String  @id @default(uuid())
+  invoiceId   String
   description String
-  quantity Int @default(1)
-  rate Float
-  taxRate Float @default(0)
-  amount Float
-  hsn String?
-  invoice Invoice @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+  quantity    Int     @default(1)
+  rate        Float
+  taxRate     Float   @default(0)
+  amount      Float
+  hsn         String?
+  invoice     Invoice @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+
   @@index([invoiceId])
 }
 
@@ -169,10 +169,10 @@ enum Otptype {
 }
 
 model Otp {
-  id String @id @default(uuid())
-  email String
-  code String
-  type Otptype
+  id        String   @id @default(uuid())
+  email     String
+  code      String
+  type      Otptype
   expiresAt DateTime
   createdAt DateTime @default(now())
 

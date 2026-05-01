@@ -8,13 +8,16 @@ export async function GET(req: NextRequest) {
     const { user, error } = await getUser();
 
     if (error || !user) {
-      return NextResponse.json({ success: false, message: error || "Unauthorized" }, { status: 401 });
+      return NextResponse.json(
+        { success: false, message: error || "Unauthorized" },
+        { status: 401 },
+      );
     }
 
     const search = req.nextUrl.searchParams.get("search");
 
     const whereClause: any = { userId: user.id };
-    
+
     if (search) {
       whereClause.OR = [
         { companyName: { contains: search, mode: "insensitive" } },
@@ -29,7 +32,10 @@ export async function GET(req: NextRequest) {
 
     return NextResponse.json({ success: true, clients }, { status: 200 });
   } catch {
-    return NextResponse.json({ success: false, message: "Internal Server Error" }, { status: 500 });
+    return NextResponse.json(
+      { success: false, message: "Internal Server Error" },
+      { status: 500 },
+    );
   }
 }
 
@@ -41,8 +47,8 @@ const clientSchema = z.object({
   state: z.string().optional().nullable(),
   zip: z.string().optional().nullable(),
   country: z.string().default("IN").optional().nullable(),
-  companyGstin: z.string().min(1,"Company Gstin Is Required"),
-  name: z.string().min(1,"Name is Required!")
+  companyGstin: z.string().optional().nullable(),
+  name: z.string().optional().nullable(),
 });
 
 export async function POST(req: NextRequest) {
@@ -50,31 +56,60 @@ export async function POST(req: NextRequest) {
     const { user, error } = await getUser();
 
     if (error || !user) {
-      return NextResponse.json({ success: false, message: error || "Unauthorized" }, { status: 401 });
+      return NextResponse.json(
+        { success: false, message: error || "Unauthorized" },
+        { status: 401 },
+      );
     }
 
     const body = await req.json();
 
     const validation = clientSchema.safeParse(body);
     if (!validation.success) {
-      return NextResponse.json( { success: false, message: validation.error.issues[0].message }, { status: 400 } );
+      return NextResponse.json(
+        { success: false, message: validation.error.issues[0].message },
+        { status: 400 },
+      );
     }
 
-    const { companyName, email, address, city, state, zip, country,companyGstin,name } = validation.data;
+    const { companyName, email, address, city, state, zip, country,companyGstin, name } =
+      validation.data;
 
-    const existingClient = await prisma.client.findFirst({ where: { userId: user.id, companyName } });
+    const existingClient = await prisma.client.findFirst({
+      where: { userId: user.id, companyName },
+    });
 
     if (existingClient) {
-      return NextResponse.json({ success: false, message: "Client already exists" }, { status: 409 });
+      return NextResponse.json(
+        { success: false, message: "Client already exists" },
+        { status: 409 },
+      );
     }
 
     await prisma.client.create({
-      data: { userId: user.id, companyName, email, address, city, state, zip, country,companyGstin,name }
+      data: {
+        userId: user.id,
+        companyName,
+        email,
+        address,
+        city,
+        state,
+        zip,
+        country,
+        companyGstin,
+        name,
+      },
     });
 
-    return NextResponse.json({ success: true, message: "Client saved successfully" }, { status: 201 });
-
-  } catch {
-    return NextResponse.json({ success: false, message: "Internal Server Error" }, { status: 500 });
+    return NextResponse.json(
+      { success: true, message: "Client saved successfully" },
+      { status: 201 },
+    );
+  } catch(err) {
+    console.log(err)
+    return NextResponse.json(
+      { success: false, message: "Internal Server Error", "error": err },
+      { status: 500 },
+    );
   }
 }

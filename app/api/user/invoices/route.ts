@@ -39,11 +39,11 @@ export async function GET() {
 }
 
 const invoiceItemSchema = z.object({
-  description: z.string().min(1, "Item description is required"),
+  description: z.string().min(1, "Please fill atleast 1 Item"),
   quantity: z.number().min(1),
   rate: z.number().min(0),
   taxRate: z.number().min(0).default(0),
-  hsn: z.string().min(1,"HSN Code Is Required!")
+  hsn: z.string().optional().nullable()
 });
 
 const invoiceSchema = z.object({
@@ -60,7 +60,7 @@ const invoiceSchema = z.object({
   accountNumber: z.string().optional().nullable(),
   ifscCode: z.string().optional().nullable(),
   senderCompany: z.string().optional(),
-  senderGSTIN: z.string().optional(),
+  senderGSTIN: z.string().optional().nullable(),
   senderName: z.string().optional().nullable(),
   senderAddress: z.string().optional().nullable(),
   senderCity: z.string().optional().nullable(),
@@ -69,8 +69,8 @@ const invoiceSchema = z.object({
   senderCountry: z.string().optional().nullable(),
 
   clientCompany: z.string().optional(),
-  clientGSTIN: z.string().optional(),
-  clientName: z.string().optional(),
+  clientGSTIN: z.string().optional().nullable(),
+  clientName: z.string().optional().nullable(),
   clientAddress: z.string().optional().nullable(),
   clientCity: z.string().optional().nullable(),
   clientState: z.string().optional().nullable(),

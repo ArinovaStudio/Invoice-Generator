@@ -5,9 +5,7 @@ import { useRouter } from "next/navigation";
 import React, { useEffect, useRef, useState } from "react";
 import InvoiceForm from "./InvoiceForm";
 import InvoiceSettings from "./InvoiceSettings";
-import { getUser } from "@/lib/auth";
 import { useSession } from "next-auth/react";
-import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import LoadingComponent from "../LoadingComponent";
 export interface InvoiceLayoutProps {
@@ -26,7 +24,7 @@ export default function page({
 
   const [currentColor, setCurrentColor] = useState(themes[0]);
   const [selectedCurrency, setSelectedCurrency] = useState(currencies[0]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [hasSavedUpi, setHasSavedUpi] = useState(false);
 
@@ -163,11 +161,6 @@ export default function page({
     }
   }, [mode, status]);
 
-  // const handleDownloadPDF = useReactToPrint({
-  //   contentRef: invoiceRef,
-  //   documentTitle: invoice.invoiceNumber,
-  //   pageStyle: `@page { size: A4 portrait; margin: 10mm; } @media print { body { background-color: white !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; } }`,
-  // });
 
   const handleDownloadPDF = async () => {
     if (!invoiceRef.current) return;
@@ -302,13 +295,9 @@ export default function page({
         if (targetPage <= totalPages) {
           pdf.setPage(targetPage);
 
-          const upiLink = `upi://pay?pa=${encodeURIComponent(
-            invoice.paymentUpiId
-          )}&pn=${encodeURIComponent(
-            invoice.senderCompany || invoice.senderName
-          )}&am=${totals.total.toFixed(2)}&cu=INR&tn=${encodeURIComponent(
-            `Payment of ${invoice.senderCompany || invoice.senderName}`
-          )}`;
+          // const upiLink = `upi://pay?pa=${invoice.paymentUpiId}&pn=${invoice.senderCompany}&am=${totals.total}&cu=INR&tn=${`Payment of ${invoice.senderCompany}`}`;
+          const location = process.env.NEXT_PUBLIC_URL
+          const upiLink = `${location}/pay?pa=${invoice.paymentUpiId}&pn=${invoice.senderCompany}&am=${totals.total}&tn=Payment%20of%20${invoice.senderCompany}`
 
           pdf.link(pdfX, pdfY, pdfW, pdfH, { url: upiLink });
         }
@@ -321,6 +310,8 @@ export default function page({
       setPdfMode(false);
     }
   };
+
+
   const handleChange = (
     e: React.ChangeEvent<
       HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
@@ -427,15 +418,14 @@ export default function page({
 
       if (!res.ok) {
         const errorData = await res.json();
+        toast.error(errorData.message)
         throw new Error(errorData.message || "Failed to save");
       }
 
       return true;
-    } catch (error) {
+    } catch (error: any) {
       console.error(error);
-      alert(
-        "Failed to save invoice. Check the console for exact backend errors."
-      );
+      toast.error(error.message as any)
       return false;
     }
   };
