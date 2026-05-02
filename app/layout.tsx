@@ -34,7 +34,7 @@ export const metadata: Metadata = {
   metadataBase: new URL("https://arinvoice.studio"),
 
   title: {
-    default: "Invoice Generator India | Free Online Invoice Maker",
+    default: "Arinvoice | Free Online Invoice Generator",
     template: "%s | Arinvoice",
   },
 
@@ -47,6 +47,22 @@ export const metadata: Metadata = {
     "online invoice generator india",
     "upi invoice generator",
     "create invoice online india",
+    "zoho invoice",
+    "free invoice generator",
+    "free zoho invoice generator",
+    "invoice maker",
+    "invoice with payment",
+    "invoice generator with payments",
+    "invoice maker with qr code",
+    "best invoice generator",
+    "best and free invoice generator",
+    "premium and free invoice maker",
+    "arinvoice studio",
+    "invoice maker",
+    "advance invoice generator",
+    "advance invoice maker",
+    "advance invoice with payment",
+    "upi invoice generator"
   ],
 
   alternates: {
@@ -78,7 +94,7 @@ export const metadata: Metadata = {
     siteName: "Arinvoice",
     images: [
       {
-        url: "/og-image.png",
+        url: "https://arinvoice.studio/og-image-v2.png",
         width: 1200,
         height: 630,
         alt: "Arinvoice - Invoice Generator India",
@@ -93,7 +109,7 @@ export const metadata: Metadata = {
     title: "Invoice Generator for India",
     description:
       "Create invoices instantly with UPI & PDF export.",
-    images: ["/og-image.png"],
+    images: ["https://arinvoice.studio/og-image-v2.png"],
   },
 };
 
