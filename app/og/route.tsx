@@ -2,14 +2,7 @@ import { ImageResponse } from "next/og";
 
 export const runtime = "edge";
 
-export const size = {
-  width: 1200,
-  height: 630,
-};
-
-export const contentType = "image/png";
-
-export default async function Image() {
+export async function GET() {
   return new ImageResponse(
     (
       <div
@@ -19,81 +12,45 @@ export default async function Image() {
           display: "flex",
           flexDirection: "column",
           justifyContent: "space-between",
-          background: "#fff7ed", // light orange (orange-50 vibe)
+          background: "#fff7ed",
           padding: "60px",
           fontFamily: "Inter, sans-serif",
         }}
       >
         {/* Top */}
-        <div style={{ display: "flex", alignItems: "center", gap: "16px" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
           <div
             style={{
-              width: "56px",
-              height: "56px",
-              borderRadius: "12px",
-              background: "#ea580c", // orange-600
+              width: 56,
+              height: 56,
+              borderRadius: 12,
+              background: "#ea580c",
             }}
           />
-          <span
-            style={{
-              fontSize: 32,
-              fontWeight: 700,
-              color: "#9a3412", // darker orange
-            }}
-          >
+          <span style={{ fontSize: 32, fontWeight: 700 }}>
             Arinvoice
           </span>
         </div>
 
         {/* Center */}
-        <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
-          <h1
-            style={{
-              fontSize: 64,
-              fontWeight: 800,
-              color: "#7c2d12",
-              lineHeight: 1.1,
-            }}
-          >
-            Free Invoice Generator
+        <div>
+          <h1 style={{ fontSize: 64, fontWeight: 800, lineHeight: 1.1 }}>
+            Invoice Generator for India
           </h1>
-
-          <p
-            style={{
-              fontSize: 28,
-              color: "#9a3412",
-              maxWidth: "800px",
-            }}
-          >
-            Create GST-ready invoices instantly. Export PDF. No signup required.
+          <p style={{ fontSize: 28 }}>
+            Create invoices instantly with UPI & PDF export
           </p>
         </div>
 
-        {/* Bottom CTA */}
-        <div
-          style={{
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
-          }}
-        >
-          <div
-            style={{
-              fontSize: 22,
-              color: "#c2410c",
-            }}
-          >
-            arinvoice.studio
-          </div>
-
+        {/* Bottom */}
+        <div style={{ display: "flex", justifyContent: "space-between" }}>
+          <span>arinvoice.studio</span>
           <div
             style={{
               background: "#ea580c",
               color: "white",
-              padding: "14px 24px",
-              borderRadius: "12px",
-              fontSize: 22,
-              fontWeight: 600,
+              padding: "12px 20px",
+              borderRadius: 10,
             }}
           >
             Generate Now →
@@ -102,7 +59,8 @@ export default async function Image() {
       </div>
     ),
     {
-      ...size,
+      width: 1200,
+      height: 630,
     }
   );
 }
