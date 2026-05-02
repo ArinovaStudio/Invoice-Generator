@@ -106,7 +106,7 @@ export const metadata: Metadata = {
 
   twitter: {
     card: "summary_large_image",
-    title: "Invoice Generator for India",
+    title: "Arinvoice | Invoice Generator ~ Free and Instant",
     description:
       "Create invoices instantly with UPI & PDF export.",
     images: ["https://arinvoice.studio/og-image-v2.png"],
@@ -222,7 +222,8 @@ const schema = {
       )}
     >
       <head>
-        {/* Structured Data */}
+        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Manrope:wght@700;800&display=swap" rel="stylesheet" />
+        <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet" />
         <Script
           id="schema"
           type="application/ld+json"
