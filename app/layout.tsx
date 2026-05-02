@@ -78,7 +78,7 @@ export const metadata: Metadata = {
     siteName: "Arinvoice",
     images: [
       {
-        url: "/og",
+        url: "/opengraph-image.png",
         width: 1200,
         height: 630,
         alt: "Arinvoice - Invoice Generator India",
@@ -93,7 +93,7 @@ export const metadata: Metadata = {
     title: "Invoice Generator for India",
     description:
       "Create invoices instantly with UPI & PDF export.",
-    images: ["/og"],
+    images: ["/opengraph-image.png"],
   },
 };
 
