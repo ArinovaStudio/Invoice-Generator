@@ -1,5 +1,7 @@
 "use client";
 
+import Link from "next/link";
+
 const Footer = () => {
   return (
     <footer className="border-t border-border pt-16 pb-4 sm:pb-0 bg-background">
@@ -23,29 +25,25 @@ const Footer = () => {
           <div>
             <h4 className="font-semibold mb-4 text-sm uppercase tracking-wider">Product</h4>
             <ul className="space-y-3 text-muted-foreground text-sm">
-              <li><a href="#features" className="hover:text-primary transition-colors">Features</a></li>
-              <li><a href="#pricing" className="hover:text-primary transition-colors">Pricing</a></li>
-              <li><a href="#how" className="hover:text-primary transition-colors">How it works</a></li>
-              <li><a href="#compare" className="hover:text-primary transition-colors">Compare</a></li>
+              <li><Link href="#features" className="hover:text-primary transition-colors">Features</Link></li>
+              <li><Link href="#pricing" className="hover:text-primary transition-colors">Pricing</Link></li>
+              <li><Link href="#use-cases" className="hover:text-primary transition-colors">Use Cases</Link></li>
+              <li><Link href="#compare" className="hover:text-primary transition-colors">Compare</Link></li>
             </ul>
           </div>
           <div>
             <h4 className="font-semibold mb-4 text-sm uppercase tracking-wider">Help & Support</h4>
             <ul className="space-y-3 text-muted-foreground text-sm">
-              <li><a href="#" className="hover:text-primary transition-colors">Help Center</a></li>
-              <li><a href="#faq" className="hover:text-primary transition-colors">FAQ</a></li>
-              <li><a href="mailto:hello@Arinvoice.com" className="hover:text-primary transition-colors">hello@Arinvoice.com</a></li>
-              <li><a href="#" className="hover:text-primary transition-colors">Status</a></li>
-              <li><a href="#" className="hover:text-primary transition-colors">Community</a></li>
+              <li><Link href="#faq" className="hover:text-primary transition-colors">FAQ</Link></li>
+              <li><Link href="mailto:support@arinvoice.studio" className="hover:text-primary transition-colors">support@arinvoice.studio</Link></li>
             </ul>
           </div>
           <div>
             <h4 className="font-semibold mb-4 text-sm uppercase tracking-wider">Company</h4>
             <ul className="space-y-3 text-muted-foreground text-sm">
-              <li><a href="#" className="hover:text-primary transition-colors">About</a></li>
-              <li><a href="#" className="hover:text-primary transition-colors">Privacy</a></li>
-              <li><a href="#" className="hover:text-primary transition-colors">Terms</a></li>
-              <li><a href="#" className="hover:text-primary transition-colors">Security</a></li>
+              <li><Link href="/privacy" className="hover:text-primary transition-colors">Privacy</Link></li>
+              <li><Link href="/terms" className="hover:text-primary transition-colors">Terms</Link></li>
+              <li><Link href="/security" className="hover:text-primary transition-colors">Security</Link></li>
             </ul>
           </div>
         </div>

@@ -6,24 +6,64 @@ import SplitText from "./SplitText";
 
 const faqs = [
   {
-    q: "Is it really free? What's the catch?",
-    a: "Yes, truly free. No credit card, no trials, no per-invoice fees. We're building an ecosystem and Arinvoice is our gift to it — always.",
+    q: "Can I create an invoice without login or signup?",
+    a: "Yes, you can create invoices instantly without signing up. Just enter your details, generate the invoice, and download or share it.",
   },
   {
-    q: "How does the UPI QR payment work?",
-    a: "Add your UPI ID once. Every invoice auto-generates a dynamic QR locked to that invoice's amount. Clients scan from any UPI app — GPay, PhonePe, Paytm — and the money lands in your bank.",
+    q: "Is this invoice generator mobile-friendly?",
+    a: "Yes, Arinvoice works smoothly on mobile, tablet, and desktop. You can create and send invoices from anywhere.",
   },
   {
-    q: "Can I send invoices over email for free?",
-    a: "Absolutely. We deliver invoices straight from Arinvoice to your client's inbox with your branding. No SMTP setup. No fees.",
+    q: "Can I customize my invoice design?",
+    a: "Yes, you can customize fields like business details, items, taxes, and notes. Future updates may include advanced branding options.",
   },
   {
-    q: "Does Arinvoice support GST and TDS?",
-    a: "Yes — CGST, SGST, IGST, TDS, multi-currency, custom tax rates. Designed in India, usable globally.",
+    q: "What types of businesses can use this invoice generator?",
+    a: "Freelancers, agencies, startups, and small businesses in India can use Arinvoice to create professional invoices.",
   },
   {
-    q: "Where is my data stored?",
-    a: "Encrypted at rest in secure cloud infrastructure. You own it. Export anything, anytime, in CSV or PDF.",
+    q: "Can I add multiple items and taxes in an invoice?",
+    a: "Yes, you can add multiple line items, apply different tax rates, and calculate totals automatically.",
+  },
+  {
+    q: "Does Arinvoice support multi-currency invoices?",
+    a: "Yes, you can create invoices in different currencies based on your client requirements.",
+  },
+  {
+    q: "How do I send invoices to clients?",
+    a: "You can download the invoice as a PDF or share it directly via email or messaging apps.",
+  },
+  {
+    q: "Is this better than using Excel or Word for invoices?",
+    a: "Yes, Arinvoice automates calculations, generates professional PDFs, and reduces manual errors compared to Excel or Word.",
+  },
+  {
+    q: "Can I use this invoice generator for international clients?",
+    a: "Yes, you can create invoices for international clients with custom currency and details.",
+  },
+  {
+    q: "Will my invoices look professional?",
+    a: "Yes, invoices are designed with a clean and professional layout suitable for clients and businesses.",
+  },
+  {
+    q: "Can I reuse or duplicate invoices?",
+    a: "Currently, you can recreate invoices easily. Future updates may include duplication and history features.",
+  },
+  {
+    q: "Is Arinvoice suitable for small businesses in India?",
+    a: "Yes, it is designed specifically for small businesses, freelancers, and startups in India.",
+  },
+  {
+    q: "Does it calculate totals automatically?",
+    a: "Yes, totals, taxes, and final amounts are calculated automatically to save time and reduce errors.",
+  },
+  {
+    q: "Do I need technical knowledge to use this tool?",
+    a: "No, Arinvoice is simple and beginner-friendly. Anyone can create invoices in seconds.",
+  },
+  {
+    q: "Is my data stored or saved permanently?",
+    a: "No, we minimize data storage. Your invoice data is processed securely and not stored unnecessarily.",
   },
 ];
 

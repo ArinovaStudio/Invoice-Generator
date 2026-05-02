@@ -82,7 +82,7 @@ const HorizontalShowcase = () => {
   }, []);
 
   return (
-    <section ref={sectionRef} className="relative h-screen overflow-hidden bg-background">
+    <section ref={sectionRef} id="how" className="relative h-screen overflow-hidden bg-background">
       <div className="absolute top-8 left-8 z-10 text-xs font-mono tracking-widest text-muted-foreground hidden md:block">
         ◆ SCROLL HORIZONTALLY →
       </div>
