@@ -87,7 +87,7 @@ export const metadata: Metadata = {
   },
 
   openGraph: {
-    title: "Invoice Generator for India | Free & Instant",
+    title: "Arinvoice | Invoice Generator ~ Free and Instant",
     description:
       "Create invoices instantly with UPI payments and PDF export. No signup required.",
     url: "https://arinvoice.studio",
