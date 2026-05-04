@@ -121,26 +121,32 @@ useEffect(() => {
           {/* Header */}
           <div className="flex items-start justify-between">
             <div className="w-1/2 space-y-1 text-[13px] text-gray-800">
-              <label className="mb-3 flex h-18 w-28 cursor-pointer items-center justify-center overflow-hidden rounded border border-dashed border-gray-300 transition-colors hover:bg-gray-50">
-                {logoPreview ? (
-                  <img
-                    src={logoPreview}
-                    alt="Logo"
-                    className="h-full w-full object-cover"
-                  />
-                ) : (
-                  <span className="text-[11px] text-gray-400">
-                    {!pdfMode ? "Upload Logo" : "No Logo"}
-                  </span>
-                )}
+              {(!pdfMode || logoPreview) && (
+                  <label
+                    className={cn(
+                      "mb-3 flex h-18 w-28 items-center justify-center overflow-hidden rounded transition-colors",
+                      !pdfMode ? "cursor-pointer border border-dashed border-gray-300 hover:bg-gray-50" : ""
+                    )}
+                  >
+                    {logoPreview ? (
+                      <img
+                        src={logoPreview}
+                        alt="Logo"
+                        className="h-full w-full object-cover"
+                      />
+                    ) : (
+                      <span className="text-[11px] text-gray-400">Upload Logo</span>
+                    )}
 
-                <input
-                  type="file"
-                  accept="image/*"
-                  className="hidden"
-                  onChange={handleLogoUpload}
-                />
-              </label>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      className="hidden"
+                      onChange={handleLogoUpload}
+                      disabled={pdfMode}
+                    />
+                  </label>
+                )}
 
               {(!pdfMode || invoice.senderCompany) && (
                 <InlineInput
