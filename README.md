@@ -57,14 +57,6 @@
 <h3><b>🏗️ Quick Start for Developers</b></h3>
 <p><b>Clone the repository and get your local billing environment running in seconds:</b></p>
 
-<pre>
-<code>
-<b>git clone https://github.com/Arinova-Studio/arinvoice.git</b>
-<b>cd arinvoice</b>
-<b>npm install</b>
-<b>npm run dev</b>
-</code>
-</pre>
 
 <hr />
 
