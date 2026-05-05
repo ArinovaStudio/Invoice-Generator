@@ -119,6 +119,9 @@ export default function page({
 
         if (mode === "create") {
           if (user.logoUrl) setLogoPreview(user.logoUrl);
+
+          console.log(user);
+          
           setInvoice((prev: any) => ({
             ...prev,
             senderCompany: user.companyName || "",

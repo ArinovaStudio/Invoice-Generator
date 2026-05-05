@@ -432,7 +432,7 @@ export default function SettingsPage() {
                       >
                         <option value="">Select State</option>
 
-                        {State.getStatesOfCountry(profile.country || "IN").map(
+                        {State.getStatesOfCountry("IN").map(
                           (state) => (
                             <option key={state.isoCode} value={state.isoCode}>
                               {state.name}
@@ -457,7 +457,7 @@ export default function SettingsPage() {
                       <option value="">Select City</option>
 
                       {City.getCitiesOfState(
-                        profile.country || "IN",
+                        "IN",
                         profile.state
                       ).map((city) => (
                         <option key={city.name} value={city.name}>

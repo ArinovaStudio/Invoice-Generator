@@ -77,6 +77,8 @@ export default function InvoiceForm({
     }));
   };
 
+
+  
   const removeItem = (index: number) => {
     if (invoice.items.length === 1) return;
     setInvoice((prev: any) => ({
@@ -213,7 +215,7 @@ useEffect(() => {
                 (pdfMode ? (
                   <div className="px-1 text-gray-700 text-[12px]">
                     {
-                      State.getStatesOfCountry(invoice.senderCountry).find(
+                      State.getStatesOfCountry("IN").find(
                         (s) => s.isoCode === invoice.senderState
                       )?.name
                     }
@@ -226,7 +228,7 @@ useEffect(() => {
                     className="w-full rounded bg-transparent px-1 text-sm text-gray-700 disabled:opacity-50"
                   >
                     <option value="">Select State</option>
-                    {State.getStatesOfCountry(invoice.senderCountry).map(
+                    {State.getStatesOfCountry("IN").map(
                       (state) => (
                         <option key={state.isoCode} value={state.isoCode}>
                           {state.name}
@@ -252,7 +254,7 @@ useEffect(() => {
                   >
                     <option value="">Select City</option>
                     {City.getCitiesOfState(
-                      invoice.senderCountry,
+                      "IN",
                       invoice.senderState
                     ).map((city) => (
                       <option key={city.name} value={city.name}>
