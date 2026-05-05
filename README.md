@@ -18,7 +18,7 @@
   
   <p>
     <a href="https://arinvoice.studio"><b>🌐 Official Website</b></a> • 
-    <a href="https://arinvoice.studio/dashboard"><b>🚀 Launch App</b></a> • 
+    <a href="https://arinvoice.studio/invoice"><b>🚀 Launch App</b></a> • 
     <a href="https://arinova.studio"><b>🏢 Arinova Studio</b></a>
   </p>
 </div>
