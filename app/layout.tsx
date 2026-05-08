@@ -34,6 +34,7 @@ export const metadata: Metadata = {
   metadataBase: new URL("https://arinvoice.studio"),
   other: {
     "google-adsense-account": "ca-pub-2802206751704874",
+    "google-site-verification" :"D0BwV43G_Cdia38gOdPrm-5zDwLqm0VpxdK9ea56a2I",
   },
   title: {
     default: "Arinvoice | Free Online Invoice Generator",
@@ -227,7 +228,8 @@ const schema = {
         <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Manrope:wght@700;800&display=swap" rel="stylesheet" />
         <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet" />
         <meta name="google-adsense-account" content="ca-pub-2802206751704874" />
-          
+        <meta name="google-site-verification" content="D0BwV43G_Cdia38gOdPrm-5zDwLqm0VpxdK9ea56a2I" />
+        
         <Script
           src="https://www.googletagmanager.com/gtag/js?id=G-Y49DFBEP5M"
           strategy="afterInteractive"
