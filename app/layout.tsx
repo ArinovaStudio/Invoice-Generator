@@ -32,7 +32,9 @@ const jetbrainsMono = JetBrains_Mono({
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://arinvoice.studio"),
-
+  other: {
+    "google-adsense-account": "ca-pub-2802206751704874",
+  },
   title: {
     default: "Arinvoice | Free Online Invoice Generator",
     template: "%s | Arinvoice",
@@ -224,6 +226,8 @@ const schema = {
       <head>
         <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Manrope:wght@700;800&display=swap" rel="stylesheet" />
         <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet" />
+        <meta name="google-adsense-account" content="ca-pub-2802206751704874" />
+          
         <Script
           src="https://www.googletagmanager.com/gtag/js?id=G-Y49DFBEP5M"
           strategy="afterInteractive"
