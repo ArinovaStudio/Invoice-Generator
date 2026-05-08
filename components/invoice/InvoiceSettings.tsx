@@ -234,6 +234,24 @@ export default function InvoiceSettings({
 
                         <div>
                           <label className="mb-1 block text-xs font-medium text-gray-600">
+                            Account Holder Name
+                          </label>
+                          <input
+                            type="text"
+                            placeholder="John Doe"
+                            value={invoice.accountHolderName || ""}
+                            onChange={(e) =>
+                              setInvoice((p: any) => ({
+                                ...p,
+                                accountHolderName: e.target.value,
+                              }))
+                            }
+                            className="w-full rounded-md border border-gray-200 bg-white p-2 text-sm"
+                          />
+                        </div>
+                        <div>
+
+                          <label className="mb-1 block text-xs font-medium text-gray-600">
                             Account Number
                           </label>
                           <input

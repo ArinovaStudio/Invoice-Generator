@@ -57,6 +57,7 @@ const invoiceSchema = z.object({
   dueDate: z.string().transform((str) => new Date(str)),
   paymentMethod: z.enum(["bank", "upi"]).optional(),
   bankName: z.string().optional().nullable(),
+  accountHolderName: z.string().optional().nullable(),
   accountNumber: z.string().optional().nullable(),
   ifscCode: z.string().optional().nullable(),
   senderCompany: z.string().optional(),
@@ -216,7 +217,7 @@ export async function POST(req: NextRequest) {
         clientState: dbClient?.state || data.clientState,
         clientZip: dbClient?.zip || data.clientZip,
         clientCountry: dbClient?.country || data.clientCountry || "India",
-
+        accountHolderName: data.accountHolderName,
         subTotal: calculatedSubTotal,
         taxTotal: calculatedTaxTotal,
         totalAmount: calculatedTotalAmount,

@@ -149,6 +149,7 @@ export default function page({
             bankName: paymentData.paymentDetails.bankName,
             accountNumber: paymentData.paymentDetails.accountNumber,
             ifscCode: paymentData.paymentDetails.ifscCode,
+            accountHolderName: paymentData.paymentDetails.accountHolderName,
           }));
         }
       }

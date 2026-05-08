@@ -58,7 +58,6 @@ model PaymentDetails {
   accountNumber     String?
   ifscCode          String?
   accountHolderName String?
-
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
@@ -100,43 +99,44 @@ model Invoice {
   paymentUpiId  String?
   includeQrCode Boolean @default(false)
 
-  invoiceNumber    String
-  status           InvoiceStatus @default(DRAFT)
-  issueDate        DateTime      @default(now())
-  dueDate          DateTime
-  senderCompany    String?
-  senderGSTIN      String?
-  senderLogoUrl    String?
-  senderName       String
-  senderAddress    String?
-  senderCity       String?
-  senderState      String?
-  senderZip        String?
-  senderCountry    String?       @default("IN")
-  clientCompany    String?
-  clientGSTIN      String?
-  clientName       String
-  clientAddress    String?
-  clientCity       String?
-  clientState      String?
-  clientZip        String?
-  clientCountry    String?       @default("IN")
-  subTotal         Float
-  taxTotal         Float
-  totalAmount      Float
-  paymentMethod    String?
-  bankName         String?
-  accountNumber    String?
-  ifscCode         String?
-  notesTitle       String        @default("Notes")
-  notes            String?       @db.Text
-  termsTitle       String        @default("Terms & Conditions")
-  terms            String?       @db.Text
-  tableDescLabel   String        @default("Item Description")
-  tableQtyLabel    String        @default("Qty")
-  tableRateLabel   String        @default("Rate")
-  tableTaxLabel    String        @default("Tax %")
-  tableAmountLabel String        @default("Amount")
+  invoiceNumber     String
+  status            InvoiceStatus @default(DRAFT)
+  issueDate         DateTime      @default(now())
+  dueDate           DateTime
+  senderCompany     String?
+  senderGSTIN       String?
+  senderLogoUrl     String?
+  senderName        String
+  senderAddress     String?
+  senderCity        String?
+  senderState       String?
+  senderZip         String?
+  senderCountry     String?       @default("IN")
+  clientCompany     String?
+  clientGSTIN       String?
+  clientName        String
+  clientAddress     String?
+  clientCity        String?
+  clientState       String?
+  clientZip         String?
+  clientCountry     String?       @default("IN")
+  subTotal          Float
+  taxTotal          Float
+  totalAmount       Float
+  paymentMethod     String?
+  bankName          String?
+  accountHolderName String?
+  accountNumber     String?
+  ifscCode          String?
+  notesTitle        String        @default("Notes")
+  notes             String?       @db.Text
+  termsTitle        String        @default("Terms & Conditions")
+  terms             String?       @db.Text
+  tableDescLabel    String        @default("Item Description")
+  tableQtyLabel     String        @default("Qty")
+  tableRateLabel    String        @default("Rate")
+  tableTaxLabel     String        @default("Tax %")
+  tableAmountLabel  String        @default("Amount")
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

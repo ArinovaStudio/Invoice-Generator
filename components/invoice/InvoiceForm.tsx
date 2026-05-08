@@ -817,6 +817,15 @@ useEffect(() => {
                     </div>
                   )}
 
+                  {invoice.accountHolderName && (
+                    <div className="flex justify-between gap-3">
+                      <span className="text-gray-500">Account Holder Name</span>
+                      <span className="font-medium text-right break-all">
+                        {invoice.accountHolderName}
+                      </span>
+                    </div>
+                  )}
+
                   {invoice.accountNumber && (
                     <div className="flex justify-between gap-3">
                       <span className="text-gray-500">A/C No.</span>

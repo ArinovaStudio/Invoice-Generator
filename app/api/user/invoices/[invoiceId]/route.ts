@@ -48,6 +48,7 @@ const updateInvoiceItemSchema = z.object({
   taxRate: z.number().min(0).default(0),
   hsn: z.string().min(1, "HSN Code Is Required!"),
 });
+
 const updateInvoiceSchema = z.object({
   clientId: z.string().optional().nullable(),
   title: z.string().optional(),
