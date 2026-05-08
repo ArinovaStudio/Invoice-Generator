@@ -240,6 +240,14 @@ const schema = {
           `}
         </Script>
 
+                {/* Google AdSense */}
+        <Script
+          async
+          strategy="afterInteractive"
+          src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-2802206751704874"
+          crossOrigin="anonymous"
+        />
+        
       </head>
 
       <body className="min-h-full flex flex-col">
