@@ -481,7 +481,7 @@ export default function ClientsPage() {
                 <button
                   type="submit"
                   disabled={isSubmitting}
-                  className="w-full sm:w-auto px-6 py-2.5 rounded-lg bg-blue-600 text-white text-sm font-medium hover:bg-blue-700 active:scale-95 transition disabled:opacity-50"
+                  className="w-full sm:w-auto px-6 py-2.5 rounded-lg bg-primary text-white text-sm font-medium hover:bg-blue-700 active:scale-95 transition disabled:opacity-50"
                 >
                   {isSubmitting ? "Saving..." : "Save Client"}
                 </button>

@@ -39,23 +39,37 @@ export async function GET() {
 }
 
 const invoiceItemSchema = z.object({
-  description: z.string().min(1, "Please fill atleast 1 Item"),
-  quantity: z.number().min(1),
-  rate: z.number().min(0),
-  taxRate: z.number().min(0).default(0),
-  hsn: z.string().optional().nullable()
+  description: z
+    .string()
+    .min(1, { error: "Please fill atleast 1 Item In Table" }),
+  quantity: z.number().min(1, { error: "Quantity must be at least 1" }),
+  rate: z.number().min(0, { error: "Rate cannot be negative" }),
+  taxRate: z
+    .number()
+    .min(0, { error: "Tax rate cannot be negative" })
+    .default(0),
+  hsn: z.string().optional().nullable(),
 });
 
 const invoiceSchema = z.object({
   clientId: z.string().optional().nullable(),
-
   title: z.string().default("INVOICE"),
   paymentUpiId: z.string().optional().nullable(),
   includeQrCode: z.boolean().default(false),
-  invoiceNumber: z.string().min(1, "Invoice number is required"),
-  issueDate: z.string().transform((str) => new Date(str)),
-  dueDate: z.string().transform((str) => new Date(str)),
-  paymentMethod: z.enum(["bank", "upi"]).optional(),
+  invoiceNumber: z.string().min(1, { error: "Invoice number is required" }),
+  issueDate: z
+    .string()
+    .min(1, { error: "Issue date is required" })
+    .transform((str) => new Date(str)),
+  dueDate: z
+    .string()
+    .min(1, { error: "Due date is required" })
+    .transform((str) => new Date(str)),
+  paymentMethod: z
+    .enum(["bank", "upi"], {
+      error: "Please select a valid payment method",
+    })
+    .optional(),
   bankName: z.string().optional().nullable(),
   accountHolderName: z.string().optional().nullable(),
   accountNumber: z.string().optional().nullable(),
@@ -68,7 +82,6 @@ const invoiceSchema = z.object({
   senderState: z.string().optional().nullable(),
   senderZip: z.string().optional().nullable(),
   senderCountry: z.string().optional().nullable(),
-
   clientCompany: z.string().optional(),
   clientGSTIN: z.string().optional().nullable(),
   clientName: z.string().optional().nullable(),
@@ -77,19 +90,18 @@ const invoiceSchema = z.object({
   clientState: z.string().optional().nullable(),
   clientZip: z.string().optional().nullable(),
   clientCountry: z.string().optional().nullable(),
-
   tableDescLabel: z.string().default("Item Description"),
   tableQtyLabel: z.string().default("Qty"),
   tableRateLabel: z.string().default("Rate"),
   tableTaxLabel: z.string().default("Tax %"),
   tableAmountLabel: z.string().default("Amount"),
-
   notesTitle: z.string().default("Notes"),
   notes: z.string().optional().nullable(),
   termsTitle: z.string().default("Terms & Conditions"),
   terms: z.string().optional().nullable(),
-
-  items: z.array(invoiceItemSchema).min(1, "At least one item is required"),
+  items: z
+    .array(invoiceItemSchema)
+    .min(1, { error: "At least one item is required" }),
 });
 
 export async function POST(req: NextRequest) {
@@ -159,7 +171,7 @@ export async function POST(req: NextRequest) {
         rate: item.rate,
         taxRate: item.taxRate,
         amount: finalItemAmount,
-        hsn: item.hsn
+        hsn: item.hsn,
       };
     });
 
@@ -238,7 +250,6 @@ export async function POST(req: NextRequest) {
         clientGSTIN: data.clientGSTIN,
         senderCompany: data.senderCompany,
         senderGSTIN: data.senderGSTIN,
-
       },
     });
 
@@ -246,7 +257,7 @@ export async function POST(req: NextRequest) {
       { success: true, message: "Invoice created successfully" },
       { status: 201 }
     );
-  } catch {
+  } catch (error: any) {
     return NextResponse.json(
       { success: false, message: "Internal Server Error" },
       { status: 500 }

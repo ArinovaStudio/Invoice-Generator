@@ -46,54 +46,76 @@ const updateInvoiceItemSchema = z.object({
   quantity: z.number().min(1),
   rate: z.number().min(0),
   taxRate: z.number().min(0).default(0),
-  hsn: z.string().min(1, "HSN Code Is Required!"),
+  hsn: z.string().optional().nullable(),
 });
 
 const updateInvoiceSchema = z.object({
-  clientId: z.string().optional().nullable(),
+  clientId: z.string().nullish(),
+
   title: z.string().optional(),
-  paymentUpiId: z.string().optional().nullable(),
+
+  paymentUpiId: z.string().nullish(),
+
   includeQrCode: z.boolean().optional(),
-  invoiceNumber: z.string().optional(),
-  status: z.enum(["DRAFT", "SENT", "PAID", "OVERDUE", "CANCELLED"]).optional(),
+
+  invoiceNumber: z
+    .string()
+    .min(1, { error: "Invoice number is required" })
+    .optional(),
+
+  status: z
+    .enum(["DRAFT", "SENT", "PAID", "OVERDUE", "CANCELLED"], {
+      error: "Invalid invoice status",
+    })
+    .optional(),
+
   issueDate: z
     .string()
+    .min(1, { error: "Issue date is required" })
     .transform((str) => new Date(str))
     .optional(),
+
   dueDate: z
     .string()
+    .min(1, { error: "Due date is required" })
     .transform((str) => new Date(str))
     .optional(),
+
   senderCompany: z.string().optional(),
+
   senderGSTIN: z.string().optional(),
+
   senderName: z.string().optional(),
-  senderAddress: z.string().optional().nullable(),
-  senderCity: z.string().optional().nullable(),
-  senderState: z.string().optional().nullable(),
-  senderZip: z.string().optional().nullable(),
-  senderCountry: z.string().optional().nullable(),
 
+  senderAddress: z.string().nullish(),
+
+  senderCity: z.string().nullish(),
+
+  senderState: z.string().nullish(),
+  senderZip: z.string().nullish(),
+  senderCountry: z.string().nullish(),
   clientName: z.string().optional(),
-  clientCompany: z.string().optional(),
-  clientGSTIN: z.string().optional(),
-  clientAddress: z.string().optional().nullable(),
-  clientCity: z.string().optional().nullable(),
-  clientState: z.string().optional().nullable(),
-  clientZip: z.string().optional().nullable(),
-  clientCountry: z.string().optional().nullable(),
-
+  clientCompany: z.string().nullish(),
+  clientGSTIN: z.string().nullish(),
+  clientAddress: z.string().nullish(),
+  clientCity: z.string().nullish(),
+  clientState: z.string().nullish(),
+  clientZip: z.string().nullish(),
+  clientCountry: z.string().nullish(),
   notesTitle: z.string().optional(),
-  notes: z.string().optional().nullable(),
+  notes: z.string().nullish(),
   termsTitle: z.string().optional(),
-  terms: z.string().optional().nullable(),
-
+  terms: z.string().nullish(),
   tableDescLabel: z.string().optional(),
   tableQtyLabel: z.string().optional(),
   tableRateLabel: z.string().optional(),
   tableTaxLabel: z.string().optional(),
   tableAmountLabel: z.string().optional(),
-
-  items: z.array(updateInvoiceItemSchema).optional(),
+  items: z
+    .array(updateInvoiceItemSchema, {
+      error: "Items must be a valid array",
+    })
+    .optional(),
 });
 type UpdateSchema = z.infer<typeof updateInvoiceSchema>;
 export async function PUT(
@@ -131,6 +153,7 @@ export async function PUT(
       const parsedData = JSON.parse(rawData);
       const validation = updateInvoiceSchema.safeParse(parsedData);
       if (!validation.success) {
+        console.log(validation.error.flatten());
         return NextResponse.json(
           { success: false, message: validation.error.issues[0].message },
           { status: 400 }
@@ -204,7 +227,7 @@ export async function PUT(
           rate: item.rate,
           taxRate: item.taxRate,
           amount: itemBase + itemTax,
-          hsn: item.hsn
+          hsn: item.hsn,
         };
       });
 
@@ -233,7 +256,7 @@ export async function PUT(
       { success: true, message: "Invoice updated" },
       { status: 200 }
     );
-  } catch(error: any) {
+  } catch (error: any) {
     console.log(error.message);
     return NextResponse.json(
       { success: false, message: "Internal Server Error" },

@@ -426,13 +426,14 @@ export default function page({
 
       if (!res.ok) {
         const errorData = await res.json();
-        toast.error(errorData.message);
-        throw new Error(errorData.message || "Failed to save");
+        // toast.error(errorData.message);
+        throw Error(errorData.message || "Failed to save");
+        return false;
       }
 
       return true;
     } catch (error: any) {
-      console.error(error);
+      // console.error(error);
       toast.error(error.message as any);
       return false;
     }
