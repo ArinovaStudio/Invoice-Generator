@@ -257,7 +257,7 @@ export async function PUT(
       { status: 200 }
     );
   } catch (error: any) {
-    console.log(error.message);
+    // console.log(error.message);
     return NextResponse.json(
       { success: false, message: "Internal Server Error" },
       { status: 500 }
