@@ -48,7 +48,7 @@ const updateClientSchema = z.object({
   zip: z.string().optional().nullable(),
   country: z.string().optional().nullable(),
   companyGstin: z.string().min(1, "Company Gstin Is Required"),
-  name: z.string().min(1, "Name is Required!"),
+  name: z.string().optional().nullable(),
 });
 
 export async function PUT(
